@@ -28,6 +28,8 @@ export class ReservationService {
       );
     }
 
+    await this.rejectIfGuestHasNotClearedAirport(createReservationDto.guest_id);
+
     const rooms = await this.prisma.room.findMany({
       where: { type: createReservationDto.room_type },
       orderBy: { id: 'asc' },
@@ -84,8 +86,6 @@ export class ReservationService {
         status: ReservationStatus.CONFIRMED,
       },
     });
-
-    await this.rejectIfGuestHasNotClearedAirport(reservation.guest_id);
 
     await this.broadcast.publishHotelEvent(
       HotelBroadcastEventType.ReservationConfirmed,
@@ -159,7 +159,7 @@ export class ReservationService {
                rm.type AS room_type
         FROM "Reservation" r
         JOIN "Room" rm ON rm.id = r.room_id
-        WHERE r.guest_id = ${Prisma.raw(`'${guestId}'`)}
+        WHERE r.guest_id = ${guestId}
         ORDER BY r.check_in_day DESC
         LIMIT 1
       `,
@@ -186,9 +186,8 @@ export class ReservationService {
   }
 
   async cancel(id: string): Promise<CancelReservationResponseDto> {
-    // id is UUID generated server-side, not user-controlled string
     await this.prisma.$executeRaw(
-      Prisma.sql`UPDATE "Reservation" SET status = 'CANCELLED' WHERE id = ${Prisma.raw(`'${id}'`)}`,
+      Prisma.sql`UPDATE "Reservation" SET status = 'CANCELLED' WHERE id = ${id}`,
     );
 
     const existingReservation = await this.prisma.reservation.findFirst({
