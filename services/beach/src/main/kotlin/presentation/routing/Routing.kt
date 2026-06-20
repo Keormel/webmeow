@@ -1,7 +1,6 @@
 package com.hackathon.summer.faf.presentation.routing
 
 import com.hackathon.summer.faf.presentation.controller.ActivityController
-import com.hackathon.summer.faf.presentation.response.ErrorResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -24,6 +23,10 @@ fun Route.activityRoutes(
 
         post("/cancel/{activity_id}") {
             controller.cancel(call)
+        }
+
+        get("/by-guest/{visitor_id}") {
+            controller.getActivityByGuest(call)
         }
 
         get("/{activity_id}") {

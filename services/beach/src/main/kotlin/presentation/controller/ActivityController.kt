@@ -7,6 +7,8 @@ import com.hackathon.summer.faf.domain.repository.ActivityRepository
 import com.hackathon.summer.faf.presentation.request.VisitorRequest
 import com.hackathon.summer.faf.presentation.response.ActivityResponse
 import com.hackathon.summer.faf.presentation.response.ErrorResponse
+import domain.error.ActivityErrors
+import domain.error.VisitorErrors
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -20,19 +22,44 @@ class ActivityController(
     private val cancelActivityUseCase: CancelActivityUseCase
 ) {
 
+    private suspend fun respondError(call: ApplicationCall, error: String) {
+        val status = when (error) {
+            ActivityErrors.ACTIVITY_NOT_FOUND,
+            VisitorErrors.VISITOR_NOT_FOUND -> HttpStatusCode.NotFound
+
+            ActivityErrors.ACTIVITY_FULL,
+            ActivityErrors.ACTIVITY_ALREADY_BOOKED,
+            ActivityErrors.ACTIVITY_NOT_BOOKED,
+            VisitorErrors.VISITOR_ALREADY_BOOKED_OTHER_ACTIVITY -> HttpStatusCode.Conflict
+
+            VisitorErrors.VISITOR_NOT_CHECKED_IN -> HttpStatusCode.Forbidden
+
+            else -> HttpStatusCode.BadRequest
+        }
+
+        call.respond(status, ErrorResponse(error))
+    }
+
     suspend fun book(call: ApplicationCall) {
 
         val activityId = call.parameters["activity_id"]
 
+        if (activityId.isNullOrBlank()) {
+            respondError(call, ActivityErrors.MISSING_ACTIVITY_ID)
+            return
+        }
 
         val request = call.receive<VisitorRequest>()
 
         val error = bookActivityUseCase.execute(
-            activityId = activityId!!,
+            activityId = activityId,
             visitorId = request.id
         )
 
-        println(error)
+        if (error != null) {
+            respondError(call, error)
+            return
+        }
 
         call.respond(
             HttpStatusCode.OK,
@@ -44,16 +71,22 @@ class ActivityController(
 
         val activityId = call.parameters["activity_id"]
 
+        if (activityId.isNullOrBlank()) {
+            respondError(call, ActivityErrors.MISSING_ACTIVITY_ID)
+            return
+        }
 
         val request = call.receive<VisitorRequest>()
 
         val error = cancelActivityUseCase.execute(
-            activityId = activityId!!,
+            activityId = activityId,
             visitorId = request.id
         )
 
-        println(error)
-
+        if (error != null) {
+            respondError(call, error)
+            return
+        }
 
         call.respond(
             HttpStatusCode.OK,
@@ -61,17 +94,43 @@ class ActivityController(
         )
     }
 
+    suspend fun getActivityByGuest(call: ApplicationCall) {
+
+        val visitorId = call.parameters["visitor_id"]
+
+        if (visitorId.isNullOrBlank()) {
+            respondError(call, VisitorErrors.VISITOR_MISSING_ID)
+            return
+        }
+
+        val activity = activityRepository.findByBookedVisitor(visitorId)
+
+        call.respond(
+            HttpStatusCode.OK,
+            mapOf("activity_id" to activity?.id)
+        )
+    }
+
     suspend fun getActivity(call: ApplicationCall) {
 
         val activityId = call.parameters["activity_id"]
 
+        if (activityId.isNullOrBlank()) {
+            respondError(call, ActivityErrors.MISSING_ACTIVITY_ID)
+            return
+        }
 
-        val activity = activityRepository.findById(activityId!!)
+        val activity = activityRepository.findById(activityId)
+
+        if (activity == null) {
+            respondError(call, ActivityErrors.ACTIVITY_NOT_FOUND)
+            return
+        }
 
         call.respond(
             HttpStatusCode.OK,
             ActivityResponse(
-                activity_id = activity!!.id,
+                activity_id = activity.id,
                 activity_name = activity.name,
                 description = activity.description,
                 capacity = activity.capacity,

@@ -16,6 +16,7 @@ interface ZoneIndicatorProps {
   accent: string;
   markerSrc: string;
   markerScale?: number;
+  isQuestTarget?: boolean;
   healthLevel?: number;
   eventRate?: number;
   onClick?: (id: ZoneId) => void;
@@ -32,6 +33,7 @@ export function ZoneIndicator({
   accent,
   markerSrc,
   markerScale = 1,
+  isQuestTarget = false,
   onClick,
 }: ZoneIndicatorProps) {
   const isAdmin = useIsAdmin();
@@ -70,6 +72,7 @@ export function ZoneIndicator({
       aria-label={label}
       data-testid={`zone-indicator-${id}`}
       data-locked={locked}
+      data-quest-target={isQuestTarget}
       onClick={() => onClick?.(id)}
       className="pointer-events-auto absolute flex cursor-pointer items-center justify-center"
       style={{
@@ -90,7 +93,8 @@ export function ZoneIndicator({
           className={cn(
             "zone-marker-asset h-full w-full object-contain select-none",
             locked && "is-locked",
-            isActive && "is-active"
+            isActive && "is-active",
+            isQuestTarget && "is-quest-target"
           )}
           draggable={false}
           style={{ "--zone-accent": accent } as React.CSSProperties}

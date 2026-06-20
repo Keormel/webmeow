@@ -1,6 +1,8 @@
 package com.hackathon.summer.faf.application.usecase
 
 import com.hackathon.summer.faf.domain.repository.ActivityRepository
+import domain.error.ActivityErrors
+import domain.error.VisitorErrors
 
 
 class CancelActivityUseCase(
@@ -10,10 +12,17 @@ class CancelActivityUseCase(
     fun execute(activityId: String, visitorId: String): String? {
 
         val activity = activityRepository.findById(activityId)
+            ?: return ActivityErrors.ACTIVITY_NOT_FOUND
 
-        activity?.bookedVisitors?.remove(visitorId)
+        if (visitorId.isBlank()) {
+            return VisitorErrors.VISITOR_MISSING_ID
+        }
 
-        activityRepository.save(activity!!)
+        if (!activity.bookedVisitors.contains(visitorId)) {
+            return ActivityErrors.ACTIVITY_NOT_BOOKED
+        }
+
+        activityRepository.cancel(activityId, visitorId)
 
         return null
     }
