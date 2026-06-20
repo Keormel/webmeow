@@ -49,11 +49,17 @@ export const GateStatusSchema = z.object({
   gate_id: z.string(),
   gate_type: z.enum(["EU", "ALL"]),
   queue_size: z.number().int(),
+  queue_length: z.number().int().optional(),
+  waiting_count: z.number().int().optional(),
+  processed_count: z.number().int().optional(),
   queue: z.array(QueuedGuestSchema),
 });
 
 export const QueueResponseSchema = z.object({
   gates: z.array(GateStatusSchema),
+  queue_length: z.number().int().optional(),
+  waiting_count: z.number().int().optional(),
+  processed_count: z.number().int().optional(),
   total_queued: z.number().int(),
   current_game_time: z.number(),
 });

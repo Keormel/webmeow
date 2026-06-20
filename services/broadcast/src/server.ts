@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 
 
@@ -13,7 +14,13 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+const corsOrigin = process.env.CORS_ORIGIN || "*";
 
+app.use(
+  cors({
+    origin: corsOrigin,
+  }),
+);
 app.use(express.json());
 
 app.get("/health", (_req, res) => {

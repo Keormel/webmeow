@@ -36,7 +36,7 @@ export function AirportAdminQueueSummary() {
           Departure queues
         </span>
         <span data-testid="queue-total" className="text-xs text-muted-foreground">
-          {queue.total_queued + 1} total
+          {queue.queue_length ?? queue.total_queued} total
         </span>
       </div>
 
