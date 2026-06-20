@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+const (
+	defaultCacheMaxEntries   = 1024
+	defaultCacheMaxBodyBytes = 1 << 20 // 1 MiB
+)
+
 type Config struct {
 	Port string
 
@@ -30,6 +35,8 @@ type Config struct {
 
 	// Optional cache and rate-limit settings. All disabled by their zero value.
 	CacheTTL           time.Duration // GATEWAY_CACHE_TTL — response cache TTL (0 = off)
+	CacheMaxEntries    int           // GATEWAY_CACHE_MAX_ENTRIES — max cached responses (0 = off)
+	CacheMaxBodyBytes  int           // GATEWAY_CACHE_MAX_BODY_BYTES — max response body cached per entry (0 = unlimited)
 	RateLimitPerWindow int           // GATEWAY_RATE_LIMIT — requests per window per client (0 = off)
 	RateLimitWindow    time.Duration // GATEWAY_RATE_WINDOW — rate-limit window (used only when limit > 0)
 }
@@ -60,6 +67,8 @@ func LoadConfig() Config {
 		InternalSecret: getEnv("INTERNAL_SECRET", ""),
 
 		CacheTTL:           getDurationEnv("GATEWAY_CACHE_TTL", 0),
+		CacheMaxEntries:    getIntEnv("GATEWAY_CACHE_MAX_ENTRIES", defaultCacheMaxEntries),
+		CacheMaxBodyBytes:  getIntEnv("GATEWAY_CACHE_MAX_BODY_BYTES", defaultCacheMaxBodyBytes),
 		RateLimitPerWindow: getIntEnv("GATEWAY_RATE_LIMIT", 0),
 		RateLimitWindow:    getDurationEnv("GATEWAY_RATE_WINDOW", time.Minute),
 	}

@@ -8,5 +8,11 @@ interface ActivityRepository {
 
     fun findById(id: String): Activity?
 
+    fun findByBookedVisitor(visitorId: String): Activity?
+
+    fun book(activityId: String, visitorId: String)
+
+    fun cancel(activityId: String, visitorId: String)
+
     fun save(activity: Activity)
 }

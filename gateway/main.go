@@ -83,7 +83,7 @@ func main() {
 func withRouteMiddleware(route func(chi.Router), cfg Config) func(chi.Router) {
 	return func(r chi.Router) {
 		if cfg.CacheTTL > 0 {
-			r.Use(CacheMiddleware(cfg.CacheTTL))
+			r.Use(CacheMiddleware(cfg.CacheTTL, cfg.CacheMaxEntries, cfg.CacheMaxBodyBytes))
 		}
 		route(r)
 	}

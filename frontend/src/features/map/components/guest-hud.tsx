@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router";
-import { IconShieldLock } from "@tabler/icons-react";
+import { IconCoin, IconShieldLock } from "@tabler/icons-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/guest";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/stores/session-selectors";
 import { useSessionStore } from "@/stores/session-store";
+import { useTokenWalletStore } from "@/features/tokens/token-store";
 
 const hudClassName =
   "fixed bottom-6 left-6 z-50 flex items-center gap-3 rounded-2xl bg-sidebar/90 px-4 py-3 shadow-xl backdrop-blur-sm";
@@ -44,6 +45,9 @@ function HudActions({ switchLabel, onSwitchSession, onQuit }: HudActionsProps) {
 
 export function GuestHud() {
   const session = useSession();
+  const tokenBalance = useTokenWalletStore((state) =>
+    session?.role === "guest" ? (state.balances[session.guest.id] ?? 0) : 0
+  );
   const clearSession = useSessionStore((state) => state.clearSession);
   const navigate = useNavigate();
 
@@ -60,7 +64,11 @@ export function GuestHud() {
 
   if (session.role === "admin") {
     return (
-      <div className={hudClassName} data-testid="session-role" data-role="admin">
+      <div
+        className={hudClassName}
+        data-testid="session-role"
+        data-role="admin"
+      >
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-sidebar-primary bg-primary text-primary-foreground">
           <IconShieldLock size={20} />
         </div>
@@ -104,6 +112,14 @@ export function GuestHud() {
         <p className="text-xs text-sidebar-foreground/60 capitalize">
           {guest.priority} guest
         </p>
+      </div>
+
+      <div
+        data-testid="token-balance"
+        className="flex shrink-0 items-center gap-1.5 rounded-full border border-sidebar-border bg-sidebar-accent px-2.5 py-1 text-xs font-semibold text-sidebar-accent-foreground"
+      >
+        <IconCoin size={14} />
+        <span>{tokenBalance}</span>
       </div>
 
       <HudActions

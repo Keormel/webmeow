@@ -1,9 +1,18 @@
 import { format } from "date-fns";
-import { IconCalendar, IconUsers, IconBed } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconUsers,
+  IconBed,
+  IconCoin,
+} from "@tabler/icons-react";
 import type { Reservation } from "@/features/hotel/types";
 import { simulationDayToDate } from "@/lib/simulation-time";
 import { PassField } from "@/components/pass-field";
 import { formatRoomType } from "@/lib/format";
+import {
+  formatTokens,
+  getReservationTokenAllowance,
+} from "@/features/tokens/token-rules";
 
 export function ReservationFields({
   reservation,
@@ -32,6 +41,11 @@ export function ReservationFields({
         icon={IconUsers}
         label="Guests"
         value={`${guest_count} guest${guest_count !== 1 ? "s" : ""}`}
+      />
+      <PassField
+        icon={IconCoin}
+        label="Package tokens"
+        value={`+${formatTokens(getReservationTokenAllowance(reservation))}`}
       />
     </>
   );

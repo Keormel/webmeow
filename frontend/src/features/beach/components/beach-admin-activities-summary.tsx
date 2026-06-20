@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { getActivities } from "@/features/beach/api/beach-client";
 import { BEACH_KEYS } from "@/features/beach/query-keys";
 import { ActivityCard } from "@/features/beach/components/activity-card";
+import { getActivityTokenCost } from "@/features/tokens/token-rules";
 import { POLL_INTERVAL_MS } from "@/lib/polling";
 
 export function BeachAdminActivitiesSummary() {
@@ -51,7 +52,11 @@ export function BeachAdminActivitiesSummary() {
       </div>
       <div className="flex flex-col gap-2">
         {activities.map((activity) => (
-          <ActivityCard key={activity.activity_id} activity={activity} />
+          <ActivityCard
+            key={activity.activity_id}
+            activity={activity}
+            tokenCost={getActivityTokenCost(activity)}
+          />
         ))}
       </div>
     </div>

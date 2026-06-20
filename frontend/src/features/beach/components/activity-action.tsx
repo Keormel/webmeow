@@ -5,6 +5,7 @@ interface ActivityActionProps {
   isBooked: boolean;
   isReplacing: boolean;
   isFull: boolean;
+  isAffordable: boolean;
   isBooking: boolean;
   isCancelling: boolean;
   onBook: () => void;
@@ -15,6 +16,7 @@ export function ActivityAction({
   isBooked,
   isReplacing,
   isFull,
+  isAffordable,
   isBooking,
   isCancelling,
   onBook,
@@ -45,12 +47,14 @@ export function ActivityAction({
     <Button
       size="sm"
       data-testid="activity-book"
-      disabled={isFull || isMutating}
+      disabled={isFull || isMutating || !isAffordable}
       onClick={onBook}
       className="shrink-0"
     >
       {isBooking ? (
         <IconLoader2 size={13} className="animate-spin" />
+      ) : !isAffordable ? (
+        "Need tokens"
       ) : isReplacing ? (
         "Switch booking"
       ) : (

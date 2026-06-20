@@ -267,6 +267,10 @@
   animation: zone-marker-glow 820ms ease-out;
 }
 
+.zone-marker-asset.is-quest-target {
+  animation: zone-quest-target 1500ms ease-in-out infinite;
+}
+
 @keyframes zone-marker-glow {
   0%,
   100% {
@@ -288,6 +292,31 @@
       )
       drop-shadow(
         0 0 64px color-mix(in srgb, var(--zone-accent) 72%, transparent)
+      );
+  }
+}
+
+@keyframes zone-quest-target {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 8px var(--zone-accent))
+      drop-shadow(
+        0 0 24px color-mix(in srgb, var(--zone-accent) 55%, transparent)
+      )
+      drop-shadow(
+        0 0 42px color-mix(in srgb, var(--zone-accent) 32%, transparent)
+      );
+  }
+
+  50% {
+    transform: translateY(-6px) scale(1.04);
+    filter: drop-shadow(0 0 14px var(--zone-accent))
+      drop-shadow(
+        0 0 38px color-mix(in srgb, var(--zone-accent) 74%, transparent)
+      )
+      drop-shadow(
+        0 0 64px color-mix(in srgb, var(--zone-accent) 45%, transparent)
       );
   }
 }

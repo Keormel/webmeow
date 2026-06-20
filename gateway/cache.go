@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"container/list"
 	"net/http"
 	"strings"
 	"sync"
@@ -15,38 +16,82 @@ type cacheEntry struct {
 	expires time.Time
 }
 
-type responseCache struct {
-	mu      sync.Mutex
-	entries map[string]cacheEntry
-	ttl     time.Duration
+type cacheRecord struct {
+	key   string
+	entry cacheEntry
 }
 
-func newResponseCache(ttl time.Duration) *responseCache {
+type responseCache struct {
+	mu           sync.Mutex
+	entries      map[string]*list.Element
+	order        *list.List
+	ttl          time.Duration
+	maxEntries   int
+	maxBodyBytes int
+}
+
+func newResponseCache(ttl time.Duration, maxEntries, maxBodyBytes int) *responseCache {
 	return &responseCache{
-		entries: make(map[string]cacheEntry),
-		ttl:     ttl,
+		entries:      make(map[string]*list.Element),
+		order:        list.New(),
+		ttl:          ttl,
+		maxEntries:   maxEntries,
+		maxBodyBytes: maxBodyBytes,
 	}
 }
 
 func (c *responseCache) get(key string) (cacheEntry, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	e, ok := c.entries[key]
+	el, ok := c.entries[key]
 	if !ok {
 		return cacheEntry{}, false
 	}
-	if time.Now().After(e.expires) {
-		delete(c.entries, key)
+	record := el.Value.(*cacheRecord)
+	if time.Now().After(record.entry.expires) {
+		c.removeElement(el)
 		return cacheEntry{}, false
 	}
-	return e, true
+	c.order.MoveToFront(el)
+	return record.entry, true
 }
 
 func (c *responseCache) set(key string, e cacheEntry) {
+	if c.maxEntries <= 0 {
+		return
+	}
+	if c.maxBodyBytes > 0 && len(e.body) > c.maxBodyBytes {
+		return
+	}
+
 	e.expires = time.Now().Add(c.ttl)
 	c.mu.Lock()
-	c.entries[key] = e
-	c.mu.Unlock()
+	defer c.mu.Unlock()
+
+	if el, ok := c.entries[key]; ok {
+		el.Value.(*cacheRecord).entry = e
+		c.order.MoveToFront(el)
+		return
+	}
+
+	c.entries[key] = c.order.PushFront(&cacheRecord{
+		key:   key,
+		entry: e,
+	})
+
+	for len(c.entries) > c.maxEntries {
+		c.removeElement(c.order.Back())
+	}
+}
+
+func (c *responseCache) removeElement(el *list.Element) {
+	if el == nil {
+		return
+	}
+
+	record := el.Value.(*cacheRecord)
+	delete(c.entries, record.key)
+	c.order.Remove(el)
 }
 
 // cacheCapture tees a cacheable response into a buffer while passing it through
@@ -88,12 +133,12 @@ func (c *cacheCapture) Flush() {
 }
 
 // CacheMiddleware caches safe responses (GET/HEAD, status 200, non-streaming)
-// for ttl. No-op when ttl <= 0.
-func CacheMiddleware(ttl time.Duration) func(http.Handler) http.Handler {
-	if ttl <= 0 {
+// for ttl. No-op when ttl <= 0 or maxEntries <= 0.
+func CacheMiddleware(ttl time.Duration, maxEntries, maxBodyBytes int) func(http.Handler) http.Handler {
+	if ttl <= 0 || maxEntries <= 0 {
 		return func(next http.Handler) http.Handler { return next }
 	}
-	cache := newResponseCache(ttl)
+	cache := newResponseCache(ttl, maxEntries, maxBodyBytes)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

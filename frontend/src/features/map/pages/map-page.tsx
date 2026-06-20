@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 import islandBg from "@/assets/island-bg.svg";
@@ -11,17 +11,35 @@ import { ZonePanel } from "@/features/map/components/zone-panel";
 import { ZoneId } from "@/features/map/constants";
 import { useBroadcast } from "@/features/broadcast/hooks/use-broadcast";
 import { useMapDimensions } from "@/features/map/hooks/use-map-dimensions";
+import { QuestGuide } from "@/features/quests/components/quest-guide";
+import { useQuestProgress } from "@/features/quests/hooks/use-quest-progress";
+import { useQuestStore } from "@/features/quests/quest-store";
 import { useTrafficGenerator } from "@/features/simulation/hooks/use-traffic-generator";
+import { useGuest } from "@/stores/session-selectors";
 
 export function MapPage() {
   const { w, h, minScale } = useMapDimensions();
 
   const [activeZone, setActiveZone] = useState<ZoneId | null>(null);
+  const guest = useGuest();
+  const markZoneVisited = useQuestStore((state) => state.markZoneVisited);
+  const { activeZoneId: questTargetId } = useQuestProgress();
 
   const { status } = useBroadcast();
   useTrafficGenerator();
 
   const panelOpen = activeZone !== null;
+
+  const openZone = useCallback(
+    (zoneId: ZoneId) => {
+      if (guest) {
+        markZoneVisited(guest.id, zoneId);
+      }
+
+      setActiveZone(zoneId);
+    },
+    [guest, markZoneVisited]
+  );
 
   return (
     <div className="fixed inset-0 overflow-hidden">
@@ -54,7 +72,12 @@ export function MapPage() {
                 draggable={false}
                 className="block select-none"
               />
-              <ZoneLayer mapW={w} mapH={h} onZoneClick={setActiveZone} />
+              <ZoneLayer
+                mapW={w}
+                mapH={h}
+                questTargetId={questTargetId}
+                onZoneClick={openZone}
+              />
             </div>
           </TransformComponent>
         </TransformWrapper>
@@ -65,6 +88,8 @@ export function MapPage() {
       <IslandTitle />
 
       <ConnectionStatus status={status} />
+
+      <QuestGuide onOpenZone={openZone} />
 
       <ZonePanel
         zoneId={activeZone}

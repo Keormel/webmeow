@@ -10,10 +10,16 @@ import { getZone } from "@/features/map/zone-registry";
 interface ZoneLayerProps {
   mapW: number;
   mapH: number;
+  questTargetId?: ZoneId | null;
   onZoneClick?: (id: ZoneId) => void;
 }
 
-export function ZoneLayer({ mapW, mapH, onZoneClick }: ZoneLayerProps) {
+export function ZoneLayer({
+  mapW,
+  mapH,
+  questTargetId,
+  onZoneClick,
+}: ZoneLayerProps) {
   const scaleX = mapW / MAP_W;
   const scaleY = mapH / MAP_H;
   const scale = Math.min(scaleX, scaleY);
@@ -33,6 +39,7 @@ export function ZoneLayer({ mapW, mapH, onZoneClick }: ZoneLayerProps) {
             accent={zone.accent}
             markerSrc={zone.markerSrc}
             markerScale={zone.markerScale}
+            isQuestTarget={questTargetId === id}
             onClick={onZoneClick}
           />
         );
