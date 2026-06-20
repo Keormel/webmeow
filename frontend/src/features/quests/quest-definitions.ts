@@ -16,6 +16,17 @@ export type QuestStepId =
   | "parrot"
   | "broadcast";
 
+export interface QuestRewardDefinition {
+  label: string;
+  assetFileName: string;
+  fallbackAssetFileName?: string;
+  layer: {
+    left: string;
+    top: string;
+    width: string;
+  };
+}
+
 export interface QuestStepDefinition {
   id: QuestStepId;
   zoneId: ZoneId;
@@ -24,6 +35,7 @@ export interface QuestStepDefinition {
   actionLabel: string;
   completedLabel: string;
   icon: Icon;
+  reward?: QuestRewardDefinition;
 }
 
 export const QUEST_STEPS: QuestStepDefinition[] = [
@@ -44,6 +56,16 @@ export const QUEST_STEPS: QuestStepDefinition[] = [
     actionLabel: "Go to Hotel",
     completedLabel: "Room booked",
     icon: IconBed,
+    reward: {
+      label: "Hotel badge",
+      assetFileName: "2 hotel.svg",
+      fallbackAssetFileName: "hotel.svg",
+      layer: {
+        left: "38%",
+        top: "31%",
+        width: "25%",
+      },
+    },
   },
   {
     id: "beach",
@@ -53,6 +75,15 @@ export const QUEST_STEPS: QuestStepDefinition[] = [
     actionLabel: "Go to Beach",
     completedLabel: "Activity booked",
     icon: IconUmbrella,
+    reward: {
+      label: "Beach garland",
+      assetFileName: "2 beach.svg",
+      layer: {
+        left: "18%",
+        top: "33%",
+        width: "65%",
+      },
+    },
   },
   {
     id: "parrot",
@@ -62,6 +93,15 @@ export const QUEST_STEPS: QuestStepDefinition[] = [
     actionLabel: "Go to Parrot",
     completedLabel: "Question asked",
     icon: IconFeather,
+    reward: {
+      label: "Parrot plume",
+      assetFileName: "2 parrot.svg",
+      layer: {
+        left: "0%",
+        top: "0%",
+        width: "93.5%",
+      },
+    },
   },
   {
     id: "broadcast",
@@ -71,5 +111,14 @@ export const QUEST_STEPS: QuestStepDefinition[] = [
     actionLabel: "Go to Lighthouse",
     completedLabel: "Feed checked",
     icon: IconSpeakerphone,
+    reward: {
+      label: "Lighthouse charm",
+      assetFileName: "2 lighthouse.svg",
+      layer: {
+        left: "40%",
+        top: "16%",
+        width: "38%",
+      },
+    },
   },
 ];

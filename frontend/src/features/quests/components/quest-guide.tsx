@@ -11,6 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { ZoneId } from "@/features/map/constants";
 import { getZone } from "@/features/map/zone-registry";
+import {
+  QuestRewardCat,
+  QuestRewardThumb,
+} from "@/features/quests/components/quest-reward-cat";
 import { useQuestProgress } from "@/features/quests/hooks/use-quest-progress";
 import { useQuestStore } from "@/features/quests/quest-store";
 import { cn } from "@/lib/utils";
@@ -98,11 +102,27 @@ export function QuestGuide({ onOpenZone }: QuestGuideProps) {
 
       {!collapsed && (
         <div className="mt-4 flex flex-col gap-4">
+          <QuestRewardCat steps={progress.steps} activeStep={activeStep} />
+
           <p className="text-sm leading-relaxed text-sidebar-foreground/80">
             {progress.isComplete
               ? "Every guest activity has been touched. The island is yours now."
               : activeStep?.description}
           </p>
+
+          {activeStep?.reward && (
+            <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent/60 p-2">
+              <QuestRewardThumb reward={activeStep.reward} />
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-sidebar-foreground/60">
+                  Reward waiting
+                </p>
+                <p className="text-sm font-semibold text-sidebar-foreground">
+                  {activeStep.reward.label}
+                </p>
+              </div>
+            </div>
+          )}
 
           {activeStep && (
             <Button
@@ -133,6 +153,13 @@ export function QuestGuide({ onOpenZone }: QuestGuideProps) {
               const StepIcon = step.icon;
               const active = activeStep?.id === step.id;
               const zone = getZone(step.zoneId);
+              const detail = step.reward
+                ? step.completed
+                  ? `Unlocked ${step.reward.label}`
+                  : `Reward: ${step.reward.label}`
+                : step.completed
+                  ? step.completedLabel
+                  : zone.label;
 
               return (
                 <li
@@ -165,7 +192,7 @@ export function QuestGuide({ onOpenZone }: QuestGuideProps) {
                       {index + 1}. {step.title}
                     </p>
                     <p className="text-xs text-sidebar-foreground/55">
-                      {step.completed ? step.completedLabel : zone.label}
+                      {detail}
                     </p>
                   </div>
                 </li>

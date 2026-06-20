@@ -9,6 +9,13 @@ import io.ktor.server.routing.*
 fun Route.activityRoutes(
     controller: ActivityController
 ) {
+    get("/health") {
+        call.respond(
+            HttpStatusCode.OK,
+            mapOf("status" to "ok")
+        )
+    }
+
     get("/") {
         call.respond(
             HttpStatusCode.OK,
