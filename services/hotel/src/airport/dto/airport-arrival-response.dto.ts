@@ -1,12 +1,11 @@
 export type AirportArrivalStatus = 'queued' | 'processing' | 'processed';
 
-export class AirportArrivalResponseDto {
-  guestId: string;
+export interface AirportArrivalResponseDto {
+  guest_id: string;
   status: AirportArrivalStatus;
-  isProcessed: boolean;
-  gate: string | null;
-  position: number | null;
-  queuedAt: number;
-  processedAt: number | null;
-  waitTimeSeconds: number;
+  gate?: string | null;
+  position?: number | null;
+  queued_at?: number;
+  processed_at?: number | null;
+  wait_time_seconds?: number;
 }

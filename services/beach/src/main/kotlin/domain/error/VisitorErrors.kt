@@ -11,5 +11,5 @@ object VisitorErrors {
         "Visitor is not checked in"
 
     const val VISITOR_ALREADY_BOOKED_OTHER_ACTIVITY =
-        "Visitor already boked another activity"
+        "Visitor already booked another activity"
 }

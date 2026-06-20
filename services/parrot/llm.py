@@ -4,7 +4,7 @@ import time
 from typing import TYPE_CHECKING
 from openai import AsyncOpenAI
 from config import settings
-from profanity import mask_profanity
+from profanity import mask_profanity, was_censored
 from tools import TOOL_SCHEMAS, GUEST_TOOL_SCHEMAS, execute_tool
 from tracing import request_id_ctx
 
@@ -95,7 +95,10 @@ def _assemble(
     if guest_id:
         system_prompt += f"\nThe current guest's ID is: {guest_id}\n"
 
-    user_msg = {"role": "user", "content": mask_profanity(message)}
+    masked_content = mask_profanity(message)
+    user_msg: dict = {"role": "user", "content": masked_content}
+    if was_censored(message):
+        user_msg["censored"] = True
     messages = [{"role": "system", "content": system_prompt}]
     if history:
         messages.extend(history)

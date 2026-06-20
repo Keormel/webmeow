@@ -55,7 +55,7 @@ def summarize_conversation(messages: list[dict]) -> dict:
         role = m.get("role")
         if role == "user":
             turns += 1
-            if contains_mask(m.get("content")):
+            if m.get("censored") or contains_mask(m.get("content")):
                 censored_count += 1
         elif role == "assistant":
             calls = m.get("tool_calls")
