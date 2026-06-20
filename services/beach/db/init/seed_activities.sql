@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS activities (
     capacity INT NOT NULL
 );
 
+CREATE DATABASE beach;
+
 CREATE TABLE IF NOT EXISTS activity_bookings (
     activity_id VARCHAR(50) NOT NULL,
     visitor_id VARCHAR(50) NOT NULL,

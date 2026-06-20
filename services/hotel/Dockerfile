@@ -20,8 +20,6 @@ WORKDIR /app
 
 COPY --from=builder /app ./
 
-RUN chmod +x entrypoint.sh
-
 EXPOSE 3000
 
-CMD ["./entrypoint.sh"]
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/prisma/seed.js && exec node dist/src/main.js"]
