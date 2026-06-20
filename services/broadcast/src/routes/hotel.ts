@@ -7,7 +7,7 @@ import { EventType } from "../types.js";
 const router = Router();
 
 router.post("/confirm", (req, res) => {
-  const { body } = req.body;
+  const body = req.body;
 
   broadcast({
     id: uuid(),
@@ -25,7 +25,7 @@ router.post("/confirm", (req, res) => {
 });
 
 router.post("/cancel", (req, res) => {
-  const { body } = req.body;
+  const body = req.body;
 
   broadcast({
     id: uuid(),

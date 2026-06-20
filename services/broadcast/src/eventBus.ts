@@ -4,7 +4,20 @@ import { IslandEvent } from "./types.js";
 const clients: Response[] = [];
 
 export function addClient(res: Response) {
-  //TODO: Add client
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  res.flushHeaders?.();
+
+  clients.push(res);
+
+  res.write(`event: connected\n`);
+  res.write(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
+
+  res.on("close", () => {
+    removeClient(res);
+  });
 }
 
 export function removeClient(res: Response) {

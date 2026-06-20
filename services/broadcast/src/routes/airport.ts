@@ -6,7 +6,7 @@ import { EventType } from "../types.js";
 const router = Router();
 
 router.post("/arrival", (req, res) => {
-  const { body } = req.body;
+  const body = req.body;
 
   broadcast({
     id: uuid(),
