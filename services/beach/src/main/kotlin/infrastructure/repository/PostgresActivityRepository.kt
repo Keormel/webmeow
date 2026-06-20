@@ -1,10 +1,16 @@
 package com.hackathon.summer.faf.infrastructure.repository
-
 import com.hackathon.summer.faf.domain.model.Activity
 import com.hackathon.summer.faf.domain.repository.ActivityRepository
 import com.hackathon.summer.faf.infrastructure.database.table.ActivityBookingTable
 import com.hackathon.summer.faf.infrastructure.database.table.ActivityTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class PostgresActivityRepository : ActivityRepository {
