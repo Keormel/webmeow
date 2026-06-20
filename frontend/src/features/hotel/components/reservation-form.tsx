@@ -8,6 +8,10 @@ import {
   IconArrowRight,
 } from "@tabler/icons-react";
 import type { ReservationFormValues } from "@/features/hotel/schemas/reservation-form-schema";
+import {
+  getPackagePrice,
+  getPackageTokenAllowance,
+} from "@/features/tokens/token-rules";
 import { DateField } from "./date-field";
 import { RoomTypePicker } from "./room-type-picker";
 import { GuestStepper } from "./guest-stepper";
@@ -34,12 +38,16 @@ export function ReservationForm({
   } = form;
 
   const guestCount = watch("guest_count") ?? 1;
+  const roomType = watch("room_type");
   const checkIn = watch("check_in_date");
   const checkOut = watch("check_out_date");
   const nights =
     checkIn && checkOut && checkOut > checkIn
       ? differenceInDays(checkOut, checkIn)
       : null;
+  const packageNights = nights ?? 1;
+  const packagePrice = getPackagePrice(roomType, packageNights);
+  const packageTokens = getPackageTokenAllowance(roomType, packageNights);
 
   return (
     <form
@@ -96,6 +104,21 @@ export function ReservationForm({
             {errors.guest_count.message}
           </p>
         )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 rounded-md border border-border/60 bg-muted/35 p-3">
+        <div className="flex flex-col gap-0.5">
+          <span className={fieldLabelCn}>Package total</span>
+          <span className="text-sm font-semibold text-foreground">
+            ${packagePrice}
+          </span>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className={fieldLabelCn}>Tokens included</span>
+          <span className="text-sm font-semibold text-(--zone-accent)">
+            +{packageTokens}
+          </span>
+        </div>
       </div>
 
       <Button

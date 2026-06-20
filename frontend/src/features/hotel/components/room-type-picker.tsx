@@ -2,15 +2,20 @@ import { Controller, type Control } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { IconBed, IconBedFlat, IconCrown } from "@tabler/icons-react";
 import type { ReservationFormValues } from "@/features/hotel/schemas/reservation-form-schema";
-import { ROOM_TYPES, type RoomType } from "@/features/hotel/types";
+import {
+  ROOM_PRICE_PER_NIGHT,
+  ROOM_TYPES,
+  type RoomType,
+} from "@/features/hotel/types";
+import { ROOM_TOKEN_ALLOWANCE_PER_NIGHT } from "@/features/tokens/token-rules";
 
 const ROOM_TYPE_OPTIONS: Record<
   RoomType,
-  { label: string; sub: string; Icon: typeof IconBed }
+  { label: string; bed: string; Icon: typeof IconBed }
 > = {
-  STANDARD: { label: "Standard", sub: "1 queen bed", Icon: IconBed },
-  DELUXE: { label: "Deluxe", sub: "1 king bed", Icon: IconBedFlat },
-  SUITE: { label: "Suite", sub: "King + lounge", Icon: IconCrown },
+  STANDARD: { label: "Standard", bed: "1 queen bed", Icon: IconBed },
+  DELUXE: { label: "Deluxe", bed: "1 king bed", Icon: IconBedFlat },
+  SUITE: { label: "Suite", bed: "King lounge", Icon: IconCrown },
 };
 
 interface RoomTypePickerProps {
@@ -26,7 +31,7 @@ export function RoomTypePicker({ control, disabled }: RoomTypePickerProps) {
       render={({ field }) => (
         <div className="grid grid-cols-3 gap-2">
           {ROOM_TYPES.map((value) => {
-            const { label, sub, Icon } = ROOM_TYPE_OPTIONS[value];
+            const { label, bed, Icon } = ROOM_TYPE_OPTIONS[value];
             const selected = field.value === value;
             return (
               <button
@@ -35,7 +40,7 @@ export function RoomTypePicker({ control, disabled }: RoomTypePickerProps) {
                 disabled={disabled}
                 onClick={() => field.onChange(value)}
                 className={cn(
-                  "flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-3 text-center transition-all duration-150",
+                  "flex min-h-28 cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-3 text-center transition-all duration-150",
                   selected
                     ? "border-(--zone-accent) bg-[color-mix(in_srgb,var(--zone-accent)_10%,transparent)] shadow-sm"
                     : "border-border bg-muted/40 hover:border-(--zone-accent)/50 hover:bg-muted/70",
@@ -58,7 +63,13 @@ export function RoomTypePicker({ control, disabled }: RoomTypePickerProps) {
                   {label}
                 </span>
                 <span className="text-[10px] leading-none text-muted-foreground">
-                  {sub}
+                  {bed}
+                </span>
+                <span className="text-[10px] leading-none font-medium text-(--zone-accent)">
+                  ${ROOM_PRICE_PER_NIGHT[value]}/night
+                </span>
+                <span className="text-[10px] leading-none text-muted-foreground">
+                  +{ROOM_TOKEN_ALLOWANCE_PER_NIGHT[value]} tokens/night
                 </span>
               </button>
             );

@@ -1,16 +1,20 @@
+import { IconCoin } from "@tabler/icons-react";
 import type { Activity } from "@/features/beach/types";
 import { cn } from "@/lib/utils";
+import { formatTokens } from "@/features/tokens/token-rules";
 
 interface ActivityCardProps {
   activity: Activity;
   action?: React.ReactNode;
   isBooked?: boolean;
+  tokenCost: number;
 }
 
 export function ActivityCard({
   activity,
   action,
   isBooked,
+  tokenCost,
 }: ActivityCardProps) {
   const { activity_name, description, capacity, remaining } = activity;
 
@@ -47,7 +51,13 @@ export function ActivityCard({
             <p className="text-xs text-muted-foreground">{description}</p>
           )}
         </div>
-        {action}
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/50 px-2 py-1 text-[10px] font-semibold whitespace-nowrap text-muted-foreground">
+            <IconCoin size={12} />
+            {formatTokens(tokenCost)}
+          </span>
+          {action}
+        </div>
       </div>
 
       <div className="flex items-center gap-2 pt-0.5">

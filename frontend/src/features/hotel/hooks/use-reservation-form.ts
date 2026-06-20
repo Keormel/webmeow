@@ -13,9 +13,17 @@ import {
 import { useSessionStore } from "@/stores/session-store";
 import { addDays } from "date-fns";
 import type { Reservation } from "@/features/hotel/types";
+import {
+  formatTokens,
+  getReservationTokenAllowance,
+} from "@/features/tokens/token-rules";
+import { useTokenWalletStore } from "@/features/tokens/token-store";
 
 export function useReservationForm() {
   const guest = useSessionStore((s) => s.guest);
+  const creditReservationTokens = useTokenWalletStore(
+    (s) => s.creditReservationTokens
+  );
   const queryClient = useQueryClient();
   const [confirmed, setConfirmed] = useState<Reservation | null>(null);
 
@@ -36,6 +44,15 @@ export function useReservationForm() {
     },
     onSuccess: (reservation) => {
       setConfirmed(reservation);
+      const tokens = getReservationTokenAllowance(reservation);
+      const credited = creditReservationTokens(
+        reservation.guest_id,
+        reservation.id,
+        tokens
+      );
+      if (credited) {
+        toast.success(`${formatTokens(tokens)} added to entertainment wallet`);
+      }
       queryClient.invalidateQueries({
         queryKey: [...HOTEL_KEYS.RESERVATION],
       });
