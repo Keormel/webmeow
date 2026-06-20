@@ -37,7 +37,7 @@ class Gate:
         rank = _effective_rank(guest)
         insert_at = len(self.queue)
         for i, existing in enumerate(self.queue):
-            if _effective_rank(existing) >= rank:
+            if _effective_rank(existing) > rank:
                 insert_at = i
                 break
         self.queue.insert(insert_at, guest)
@@ -67,11 +67,10 @@ class Gate:
                     db.session.commit()
 
             real_delay = self.processing_time / GAME_SPEED
-            started_at = game_now()
             time.sleep(real_delay)
 
             processed_at = game_now()
-            wait_time = processed_at - started_at
+            wait_time = processed_at - guest["queued_at"]
             guest["status"] = "processed"
             guest["processed_at"] = processed_at
             guest["wait_time_seconds"] = wait_time

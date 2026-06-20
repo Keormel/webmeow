@@ -23,7 +23,7 @@ export class AirportService {
         await response.text(),
       ) as AirportArrivalResponseDto;
 
-      return body.isProcessed;
+      return body.status === 'processed';
     } catch {
       return null;
     }

@@ -18,6 +18,11 @@ _PATTERN = re.compile(
 )
 
 
+# Lengths of mask runs produced by mask_profanity (one run per censored word).
+_MASK_LENGTHS = {len(w) for w in PROFANITY_WORDS}
+_MASK_RUN = re.compile(rf"{re.escape(MASK_CHAR)}+")
+
+
 def mask_profanity(text: str) -> str:
     """Mask profane words in user-supplied text, preserving length with '*'."""
     if not text:
@@ -25,6 +30,20 @@ def mask_profanity(text: str) -> str:
     return _PATTERN.sub(lambda m: MASK_CHAR * len(m.group(0)), text)
 
 
+def was_censored(text: str) -> bool:
+    """True if mask_profanity would alter this text."""
+    if not text:
+        return False
+    return mask_profanity(text) != text
+
+
 def contains_mask(text) -> bool:
     """True if text carries a profanity mask produced by mask_profanity."""
-    return bool(text) and MASK_CHAR in text
+    if not text or not isinstance(text, str):
+        return False
+
+    stripped = text.strip()
+    if stripped and all(c == MASK_CHAR for c in stripped):
+        return False
+
+    return any(len(match.group(0)) in _MASK_LENGTHS for match in _MASK_RUN.finditer(text))
