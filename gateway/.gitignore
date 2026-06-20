@@ -1,6 +1,7 @@
 # Compiled binary
 gateway
 gateway.exe
+/.gochache
 
 # Test binary
 *.test

@@ -44,6 +44,8 @@ When running through Docker Compose, variables are set in `docker-compose.yml` u
 | `CORS_ALLOWED_ORIGINS` | _(empty)_ | Comma-separated list of allowed CORS origins. Docker Compose defaults to `http://localhost:5173` |
 | `INTERNAL_SECRET` | _(empty)_ | Shared secret for service-to-service calls via `X-Internal-Key` header |
 | `GATEWAY_CACHE_TTL` | _(empty / off)_ | Response cache TTL (Go duration, e.g. `5s`). Empty or `0` disables caching |
+| `GATEWAY_CACHE_MAX_ENTRIES` | `1024` | Maximum cached responses per gateway route. `0` disables caching even when TTL is set |
+| `GATEWAY_CACHE_MAX_BODY_BYTES` | `1048576` | Maximum response body size cached per entry. `0` removes the per-entry body limit |
 | `GATEWAY_RATE_LIMIT` | _(empty / off)_ | Max requests per window per client. Empty or `0` disables rate limiting |
 | `GATEWAY_RATE_WINDOW` | `1m` | Rate-limit window (Go duration). Used only when `GATEWAY_RATE_LIMIT` > 0 |
 
@@ -134,6 +136,8 @@ The limit and window can be adjusted at runtime (admin only) via `PUT /admin/rat
 ## Response cache
 
 Optional, off by default. Set `GATEWAY_CACHE_TTL` (a Go duration, e.g. `5s`) to cache safe responses — `GET`/`HEAD` requests that return `200` and are not streaming — for that duration. Streaming responses (`text/event-stream`) and non-`200` responses are never cached. When `GATEWAY_CACHE_TTL` is unset or `0`, caching is disabled.
+
+The cache is bounded to avoid unbounded memory growth: `GATEWAY_CACHE_MAX_ENTRIES` limits cached responses per gateway route and evicts least-recently-used entries when full. `GATEWAY_CACHE_MAX_BODY_BYTES` skips caching responses with bodies larger than the configured size.
 
 Responses served from the cache carry an `X-Cache: HIT` header.
 
