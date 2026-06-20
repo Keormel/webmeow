@@ -42,6 +42,7 @@ services:
       BEACH_SERVICE_URL: ${BEACH_SERVICE_URL}
       BROADCAST_SERVICE_URL: ${BROADCAST_SERVICE_URL}
       PARROT_SERVICE_URL: ${PARROT_SERVICE_URL}
+      TRAVEL_ADVISOR_SERVICE_URL: ${TRAVEL_ADVISOR_SERVICE_URL}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       GATEWAY_CACHE_TTL: ${GATEWAY_CACHE_TTL}
       GATEWAY_RATE_LIMIT: ${GATEWAY_RATE_LIMIT}
@@ -56,6 +57,8 @@ services:
       broadcast:
         condition: service_started
       parrot:
+        condition: service_started
+      travel-advisor:
         condition: service_started
 
   # ──────────── Airport (Python / Flask / SQLite) ────────────
@@ -155,6 +158,17 @@ services:
     depends_on:
       gateway:
         condition: service_started
+
+  # ──────────── Travel Advisor (FastAPI / Gemini) ────────────
+  travel-advisor:
+    build: ./services/travel-advisor
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: "3004"
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL}
+      BEACH_SERVICE_URL: ${BEACH_SERVICE_URL}
 
 volumes:
   pgdata:
