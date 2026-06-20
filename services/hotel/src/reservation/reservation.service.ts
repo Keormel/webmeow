@@ -152,7 +152,9 @@ export class ReservationService {
     };
   }
 
-  async findActiveByGuestId(guestId: string): Promise<ReservationResponseDto> {
+  async findActiveByGuestId(
+    guestId: string,
+  ): Promise<ReservationResponseDto | null> {
     const rows = await this.prisma.$queryRaw<any[]>(
       Prisma.sql`
         SELECT r.id, r.guest_id, r.room_id, r.guest_count, r.check_in_day, r.check_out_day, r.status,
@@ -160,17 +162,13 @@ export class ReservationService {
         FROM "Reservation" r
         JOIN "Room" rm ON rm.id = r.room_id
         WHERE r.guest_id = ${guestId}
+          AND r.status = 'CONFIRMED'
         ORDER BY r.check_in_day DESC
         LIMIT 1
       `,
     );
 
-    if (!rows.length) {
-      throw new HttpException(
-        { error: 'Reservation not found' },
-        HttpStatus.NOT_FOUND,
-      );
-    }
+    if (!rows.length) return null;
 
     const row = rows[0];
     return {

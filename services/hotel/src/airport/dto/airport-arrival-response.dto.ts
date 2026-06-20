@@ -1,4 +1,8 @@
-export type AirportArrivalStatus = 'queued' | 'processing' | 'processed';
+export type AirportArrivalStatus =
+  | 'not_started'
+  | 'queued'
+  | 'processing'
+  | 'processed';
 
 export interface AirportArrivalResponseDto {
   guestId: string;

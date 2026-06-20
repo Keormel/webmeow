@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export const ArrivalStatusValue = z.enum(["queued", "processing", "processed"]);
+export const ArrivalStatusValue = z.enum([
+  "not_started",
+  "queued",
+  "processing",
+  "processed",
+]);
 export type ArrivalStatusValue = z.infer<typeof ArrivalStatusValue>;
 
 export const PostArrivalRequestSchema = z.object({

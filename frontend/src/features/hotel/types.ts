@@ -43,6 +43,8 @@ export const ReservationSchema = z.object({
   status: ReservationStatusSchema,
 });
 
+export const ActiveReservationSchema = ReservationSchema.nullable();
+
 export const PostReservationRequestSchema = z.object({
   guest_id: z.string(),
   room_type: RoomTypeSchema,
@@ -59,6 +61,7 @@ export const CancelReservationResponseSchema = z.object({
 export type Room = z.infer<typeof RoomSchema>;
 export type RoomsResponse = z.infer<typeof RoomsResponseSchema>;
 export type Reservation = z.infer<typeof ReservationSchema>;
+export type ActiveReservation = z.infer<typeof ActiveReservationSchema>;
 export type PostReservationRequest = z.infer<
   typeof PostReservationRequestSchema
 >;
