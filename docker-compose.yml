@@ -1,0 +1,160 @@
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║  Purrlington Island — Docker Compose                                    ║
+# ║                                                                         ║
+# ║  Start:   docker compose --env-file .env.docker up --build              ║
+# ║  Stop:    docker compose down                                           ║
+# ║  Nuke:    docker compose down -v --rmi local                            ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+services:
+  # ──────────── PostgreSQL (shared by Hotel + Beach) ────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh
+      - ./docker/seed-beach.sh:/docker-entrypoint-initdb.d/02-seed-beach.sh
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  # ──────────── Gateway (Go) ────────────
+  gateway:
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+    build: ./gateway
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: "8000"
+      AIRPORT_SERVICE_URL: ${AIRPORT_SERVICE_URL}
+      HOTEL_SERVICE_URL: ${HOTEL_SERVICE_URL}
+      BEACH_SERVICE_URL: ${BEACH_SERVICE_URL}
+      BROADCAST_SERVICE_URL: ${BROADCAST_SERVICE_URL}
+      PARROT_SERVICE_URL: ${PARROT_SERVICE_URL}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      GATEWAY_CACHE_TTL: ${GATEWAY_CACHE_TTL}
+      GATEWAY_RATE_LIMIT: ${GATEWAY_RATE_LIMIT}
+      GATEWAY_RATE_WINDOW: ${GATEWAY_RATE_WINDOW}
+    depends_on:
+      airport:
+        condition: service_started
+      hotel:
+        condition: service_started
+      beach:
+        condition: service_started
+      broadcast:
+        condition: service_started
+      parrot:
+        condition: service_started
+
+  # ──────────── Airport (Python / Flask / SQLite) ────────────
+  airport:
+    build: ./services/airport
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      BROADCAST_SERVICE_URL: ${BROADCAST_SERVICE_URL}
+      SIMULATION_START_TIME: ${SIMULATION_START_TIME}
+      GAME_SPEED: ${GAME_SPEED}
+      EU_GATES: ${EU_GATES}
+      ALL_GATES: ${ALL_GATES}
+      PROCESSING_TIME_EU: ${PROCESSING_TIME_EU}
+      PROCESSING_TIME_ALL: ${PROCESSING_TIME_ALL}
+      AIRPORT_TOKEN: ${AIRPORT_TOKEN}
+
+  # ──────────── Hotel (NestJS / Prisma / PostgreSQL) ────────────
+  hotel:
+    build: ./services/hotel
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      DATABASE_URL: ${DATABASE_URL}
+      BROADCAST_SERVICE_URL: ${BROADCAST_SERVICE_URL}
+      AIRPORT_SERVICE_URL: ${AIRPORT_SERVICE_URL}
+      SIMULATION_START_TIME: ${SIMULATION_START_TIME}
+      GAME_SPEED: ${GAME_SPEED}
+      HOTEL_TOKEN: ${HOTEL_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ──────────── Beach (Kotlin / Ktor / PostgreSQL) ────────────
+  beach:
+    build: ./services/beach
+    ports:
+      - "8080:8080"
+    environment:
+      APP_PORT: ${APP_PORT}
+      JDBC_URL: ${JDBC_URL}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      BROADCAST_SERVICE_URL: ${BROADCAST_SERVICE_URL}
+      BEACH_TOKEN: ${BEACH_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ──────────── Broadcast (Express / SSE) ────────────
+  broadcast:
+    build: ./services/broadcast
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: "3002"
+      FE_TOKEN: ${FE_TOKEN}
+      HOTEL_TOKEN: ${HOTEL_TOKEN}
+      BEACH_TOKEN: ${BEACH_TOKEN}
+      AIRPORT_TOKEN: ${AIRPORT_TOKEN}
+      PARROT_TOKEN: ${PARROT_TOKEN}
+
+  # ──────────── Parrot (FastAPI / LLM) ────────────
+  parrot:
+    build: ./services/parrot
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: "3003"
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS}
+      LLM_TOP_P: ${LLM_TOP_P}
+      AIRPORT_SERVICE_URL: ${AIRPORT_SERVICE_URL}
+      HOTEL_SERVICE_URL: ${HOTEL_SERVICE_URL}
+
+  # ──────────── Frontend (React / Vite dev server) ────────────
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_GATEWAY_URL: ${VITE_GATEWAY_URL}
+      VITE_MOCK: ${VITE_MOCK}
+      VITE_ADMIN_PASSCODE: ${VITE_ADMIN_PASSCODE}
+      VITE_TRAFFIC_GENERATOR: ${VITE_TRAFFIC_GENERATOR}
+      VITE_PARROT_CHAT_COOLDOWN_MS: ${VITE_PARROT_CHAT_COOLDOWN_MS}
+      VITE_SIMULATION_START_TIME: ${VITE_SIMULATION_START_TIME}
+      VITE_GAME_SPEED: ${VITE_GAME_SPEED}
+    depends_on:
+      gateway:
+        condition: service_started
+
+volumes:
+  pgdata:

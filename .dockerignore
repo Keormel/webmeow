@@ -1,0 +1,13 @@
+.git
+.gitignore
+.vscode
+.idea
+*.md
+plan.md
+LICENSE
+docker/
+.env
+.env.example
+.env.docker
+
+# Service-level ignores are in each service directory
