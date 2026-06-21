@@ -19,9 +19,11 @@ const corsOrigin = process.env.CORS_ALLOWED_ORIGINS;
 
 app.use(
   cors({
-    origin: corsOrigin,
+    origin: 'https://frying-liver-gotten.ngrok-free.dev',
+    credentials: true
   }),
 );
+app.options('*', cors());
 app.use(express.json());
 
 app.get("/health", (_req, res) => {
