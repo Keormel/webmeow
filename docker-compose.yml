@@ -185,3 +185,7 @@ services:
 volumes:
   pgdata:
 
+
+networks:
+  island-network:
+    driver: bridge
