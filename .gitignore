@@ -1,4 +1,4 @@
-.env
+
 .DS_Store
 
 # Gradle
@@ -25,7 +25,7 @@ logs/
 Thumbs.db
 
 # Environment files
-.env
+
 
 # Application secrets
 application-local.yaml
@@ -73,7 +73,6 @@ hs_err_pid*
 replay_pid*
 node_modules
 dist
-.env
 npm-debug.log
 .git
 .vscode
