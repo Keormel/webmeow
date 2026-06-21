@@ -15,6 +15,12 @@ import {
   type CancelReservationResponse,
 } from "@/features/hotel/types";
 
+function reservationGuestIds(reservation: Reservation): string[] {
+  return reservation.party_guest_ids?.length
+    ? reservation.party_guest_ids
+    : [reservation.guest_id];
+}
+
 export function getRooms(): Promise<RoomsResponse> {
   return api.hotel.get(RoomsResponseSchema, "/rooms");
 }
@@ -25,7 +31,7 @@ export function postReservation(
   return api.hotel
     .post(ReservationSchema, "/reservation", body)
     .then(async (reservation) => {
-      await checkInVisitor(reservation.guest_id);
+      await Promise.all(reservationGuestIds(reservation).map(checkInVisitor));
       return reservation;
     });
 }
@@ -50,7 +56,9 @@ export function cancelReservation(
         .catch(() => null);
 
       if (activeReservation) {
-        await checkOutVisitor(activeReservation.guest_id);
+        await Promise.all(
+          reservationGuestIds(activeReservation).map(checkOutVisitor)
+        );
       }
 
       return reservation;
