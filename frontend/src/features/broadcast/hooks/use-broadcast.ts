@@ -10,6 +10,15 @@ const BACKOFF_INITIAL_MS = 1_000;
 const BACKOFF_MAX_MS = 30_000;
 
 const BROADCAST_PATH = "/api/broadcast/events";
+const SSE_EVENT_TYPES = [
+  "airport.arrival",
+  "hotel.reservation_confirmed",
+  "hotel.reservation_cancelled",
+  "beach.activity_full",
+  "beach.activity_available",
+  "public.announcement",
+  "resort.announcement",
+] as const;
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object"
@@ -57,13 +66,19 @@ function normalizeIslandEvent(raw: unknown): BroadcastEvent | null {
         : typeof payload.message === "string"
           ? payload.message
           : event.type;
+  const sender =
+    typeof payload.sender === "string"
+      ? payload.sender
+      : typeof event.source === "string"
+        ? event.source
+        : "broadcast";
 
   return {
     id: event.id,
     channel: channelFromSource(event.source),
     event_type: event.type,
     message,
-    sender: typeof event.source === "string" ? event.source : "broadcast",
+    sender,
     guest_id:
       typeof nestedPayload.guest_id === "string"
         ? nestedPayload.guest_id
@@ -109,7 +124,7 @@ export function useBroadcast() {
         setStatus("connected");
       };
 
-      es.onmessage = (e: MessageEvent) => {
+      const handleMessage = (e: MessageEvent) => {
         try {
           const event = normalizeIslandEvent(JSON.parse(e.data as string));
           if (event) {
@@ -121,6 +136,10 @@ export function useBroadcast() {
           // malformed payload
         }
       };
+      es.onmessage = handleMessage;
+      SSE_EVENT_TYPES.forEach((eventType) => {
+        es.addEventListener(eventType, handleMessage);
+      });
 
       es.onerror = () => {
         es.close();
