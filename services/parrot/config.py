@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     airport_service_url: str = "http://localhost:3001"
     hotel_service_url: str = "http://localhost:3000"
     internal_secret: str = ""
+    admin_passcode: str = ""
 
     context_dir: str = "context"
 

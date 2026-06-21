@@ -1,4 +1,4 @@
-import { api } from "@/lib/api-client";
+import { api, guestHeaders } from "@/lib/api-client";
 import {
   ActivitiesResponseSchema,
   ActivitySchema,
@@ -31,7 +31,8 @@ export function bookActivity(
     `/activity/book/${activityId}`,
     {
       id: guestId,
-    }
+    },
+    guestHeaders(guestId)
   );
 }
 
@@ -42,7 +43,8 @@ export function cancelActivity(
   return api.beach.post(
     CancelActivityResponseSchema,
     `/activity/cancel/${activityId}`,
-    { id: guestId }
+    { id: guestId },
+    guestHeaders(guestId)
   );
 }
 
@@ -51,7 +53,8 @@ export function getActivityByGuest(
 ): Promise<ActivityByGuestResponse> {
   return api.beach.get(
     ActivityByGuestResponseSchema,
-    `/activity/by-guest/${guestId}`
+    `/activity/by-guest/${guestId}`,
+    guestHeaders(guestId)
   );
 }
 

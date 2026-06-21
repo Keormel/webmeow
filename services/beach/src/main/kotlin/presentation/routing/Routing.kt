@@ -41,6 +41,10 @@ fun Route.activityRoutes(
         }
     }
 
+    post("/visitor/{visitor_id}/tokens/credit") {
+        controller.creditTokens(call)
+    }
+
     get("/activities") {
         controller.getActivities(call)
     }

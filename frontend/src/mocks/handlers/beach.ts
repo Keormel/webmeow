@@ -94,11 +94,11 @@ function saveBookings(bookings: Record<string, string | null>) {
 }
 
 export const beachHandlers = [
-  http.get(`${GATEWAY_URL}/activities`, () => {
+  http.get(`${GATEWAY_URL}/api/beach/activities`, () => {
     return HttpResponse.json({ activities: loadActivities() });
   }),
 
-  http.get(`${GATEWAY_URL}/activity/:activityId`, ({ params }) => {
+  http.get(`${GATEWAY_URL}/api/beach/activity/:activityId`, ({ params }) => {
     const activities = loadActivities();
     const activity = activities.find(
       (a) => a.activity_id === String(params["activityId"])
@@ -113,7 +113,7 @@ export const beachHandlers = [
   }),
 
   http.post(
-    `${GATEWAY_URL}/activity/book/:activityId`,
+    `${GATEWAY_URL}/api/beach/activity/book/:activityId`,
     async ({ params, request }) => {
       const body = (await request.json()) as Record<string, unknown>;
       const guestId = String(body["id"]);
@@ -162,7 +162,7 @@ export const beachHandlers = [
   ),
 
   http.post(
-    `${GATEWAY_URL}/activity/cancel/:activityId`,
+    `${GATEWAY_URL}/api/beach/activity/cancel/:activityId`,
     async ({ params, request }) => {
       const body = (await request.json()) as Record<string, unknown>;
       const guestId = String(body["id"]);
@@ -192,7 +192,7 @@ export const beachHandlers = [
     }
   ),
 
-  http.get(`${GATEWAY_URL}/activity/by-guest/:guestId`, ({ params }) => {
+  http.get(`${GATEWAY_URL}/api/beach/activity/by-guest/:guestId`, ({ params }) => {
     const guestId = String(params["guestId"]);
     const bookings = loadBookings();
 

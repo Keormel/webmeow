@@ -1,4 +1,4 @@
-import { api } from "@/lib/api-client";
+import { api, guestHeaders } from "@/lib/api-client";
 import {
   PostArrivalResponseSchema,
   ArrivalStatusSchema,
@@ -12,11 +12,20 @@ import {
 export function postArrival(
   body: PostArrivalRequest
 ): Promise<PostArrivalResponse> {
-  return api.airport.post(PostArrivalResponseSchema, "/arrivals", body);
+  return api.airport.post(
+    PostArrivalResponseSchema,
+    "/arrivals",
+    body,
+    guestHeaders(body.guest_id)
+  );
 }
 
 export function getArrivalStatus(guestId: string): Promise<ArrivalStatus> {
-  return api.airport.get(ArrivalStatusSchema, `/arrivals/${guestId}`);
+  return api.airport.get(
+    ArrivalStatusSchema,
+    `/arrivals/${guestId}`,
+    guestHeaders(guestId)
+  );
 }
 
 export function getQueue(): Promise<QueueResponse> {

@@ -1,6 +1,7 @@
 import logging
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from auth import assert_guest_match, require_admin
 from schemas import (
     ChatRequest,
     ChatResponse,
@@ -25,8 +26,14 @@ async def health():
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(req: ChatRequest, request: Request):
+async def chat_endpoint(
+    req: ChatRequest,
+    request: Request,
+    x_guest_id: str | None = Header(None, alias="X-Guest-Id"),
+):
     request_id_ctx.set(request.state.request_id)
+    if req.guest_id:
+        assert_guest_match(req.guest_id, x_guest_id)
     store: ConversationStore = request.app.state.store
     history = store.get_messages(req.guest_id) if req.guest_id else []
 
@@ -42,7 +49,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
 
 @router.post("/chat/stream")
-async def chat_stream_endpoint(req: ChatRequest, request: Request):
+async def chat_stream_endpoint(
+    req: ChatRequest,
+    request: Request,
+    x_guest_id: str | None = Header(None, alias="X-Guest-Id"),
+):
+    if req.guest_id:
+        assert_guest_match(req.guest_id, x_guest_id)
     store: ConversationStore = request.app.state.store
     history = store.get_messages(req.guest_id) if req.guest_id else []
     generator = chat_stream(
@@ -65,25 +78,30 @@ async def chat_stream_endpoint(req: ChatRequest, request: Request):
 
 
 @router.get("/history/{guest_id}", response_model=HistoryResponse)
-async def get_history(guest_id: str, request: Request):
+async def get_history(
+    guest_id: str,
+    request: Request,
+    x_guest_id: str | None = Header(None, alias="X-Guest-Id"),
+):
+    assert_guest_match(guest_id, x_guest_id)
     store: ConversationStore = request.app.state.store
     return HistoryResponse(guest_id=guest_id, messages=store.get_visible(guest_id))
 
 
-@router.get("/admin/metrics", response_model=MetricsResponse)
+@router.get("/admin/metrics", response_model=MetricsResponse, dependencies=[Depends(require_admin)])
 async def admin_metrics(request: Request):
     store: ConversationStore = request.app.state.store
     return MetricsResponse(**admin.build_metrics(store))
 
 
-@router.get("/admin/conversations", response_model=ConversationListResponse)
+@router.get("/admin/conversations", response_model=ConversationListResponse, dependencies=[Depends(require_admin)])
 async def admin_conversations(request: Request):
     store: ConversationStore = request.app.state.store
     rows = admin.list_conversations(store)
     return ConversationListResponse(count=len(rows), conversations=rows)
 
 
-@router.get("/admin/conversations/{guest_id}", response_model=ConversationDetailResponse)
+@router.get("/admin/conversations/{guest_id}", response_model=ConversationDetailResponse, dependencies=[Depends(require_admin)])
 async def admin_conversation_detail(guest_id: str, request: Request):
     store: ConversationStore = request.app.state.store
     peeked = store.peek(guest_id)

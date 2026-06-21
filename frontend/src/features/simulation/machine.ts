@@ -95,7 +95,7 @@ async function handleBeachBooked({ guest, state, setState }: StepContext) {
 
   if (action < 0.1) {
     await cancelBeachActivity(state.activityId, guest);
-    await cancelHotelReservation(state.reservationId);
+    await cancelHotelReservation(state.reservationId, guest);
     setState({ stage: "new" });
     return;
   }

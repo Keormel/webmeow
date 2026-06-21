@@ -12,4 +12,7 @@ object VisitorErrors {
 
     const val VISITOR_ALREADY_BOOKED_OTHER_ACTIVITY =
         "Visitor already booked another activity"
+
+    const val VISITOR_INSUFFICIENT_TOKENS =
+        "Insufficient entertainment tokens"
 }

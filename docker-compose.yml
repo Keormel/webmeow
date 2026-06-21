@@ -1,7 +1,7 @@
 # ╔══════════════════════════════════════════════════════════════════════════╗
 # ║  Purrlington Island — Docker Compose                                    ║
 # ║                                                                         ║
-# ║  Start:   docker compose --env-file .env.docker up --build              ║
+# ║  Start:   cp .env.docker.example .env.docker && docker compose --env-file .env.docker up --build              ║
 # ║  Stop:    docker compose down                                           ║
 # ║  Nuke:    docker compose down -v --rmi local                            ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
@@ -37,6 +37,7 @@ services:
       - "8000:8000"
     environment:
       PORT: "8000"
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
       AIRPORT_SERVICE_URL: ${AIRPORT_SERVICE_URL}
       HOTEL_SERVICE_URL: ${HOTEL_SERVICE_URL}
       BEACH_SERVICE_URL: ${BEACH_SERVICE_URL}
@@ -61,8 +62,8 @@ services:
   # ──────────── Airport (Python / Flask / SQLite) ────────────
   airport:
     build: ./services/airport
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
       PORT: "3001"
       BROADCAST_SERVICE_URL: ${BROADCAST_SERVICE_URL}
@@ -77,13 +78,14 @@ services:
   # ──────────── Hotel (NestJS / Prisma / PostgreSQL) ────────────
   hotel:
     build: ./services/hotel
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       PORT: "3000"
       DATABASE_URL: ${DATABASE_URL}
       BROADCAST_SERVICE_URL: ${BROADCAST_SERVICE_URL}
       AIRPORT_SERVICE_URL: ${AIRPORT_SERVICE_URL}
+      BEACH_SERVICE_URL: ${BEACH_SERVICE_URL}
       SIMULATION_START_TIME: ${SIMULATION_START_TIME}
       GAME_SPEED: ${GAME_SPEED}
       HOTEL_TOKEN: ${HOTEL_TOKEN}
@@ -94,8 +96,8 @@ services:
   # ──────────── Beach (Kotlin / Ktor / PostgreSQL) ────────────
   beach:
     build: ./services/beach
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       APP_PORT: ${APP_PORT}
       JDBC_URL: ${JDBC_URL}
@@ -106,6 +108,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       BROADCAST_SERVICE_URL: ${BROADCAST_SERVICE_URL}
       BEACH_TOKEN: ${BEACH_TOKEN}
+      HOTEL_TOKEN: ${HOTEL_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,8 +116,8 @@ services:
   # ──────────── Broadcast (Express / SSE) ────────────
   broadcast:
     build: ./services/broadcast
-    ports:
-      - "3002:3002"
+    expose:
+      - "3002"
     environment:
       PORT: "3002"
       FE_TOKEN: ${FE_TOKEN}
@@ -122,14 +125,17 @@ services:
       BEACH_TOKEN: ${BEACH_TOKEN}
       AIRPORT_TOKEN: ${AIRPORT_TOKEN}
       PARROT_TOKEN: ${PARROT_TOKEN}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
 
   # ──────────── Parrot (FastAPI / LLM) ────────────
   parrot:
     build: ./services/parrot
-    ports:
-      - "3003:3003"
+    expose:
+      - "3003"
     environment:
       PORT: "3003"
+      ADMIN_PASSCODE: ${ADMIN_PASSCODE}
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
       LLM_BASE_URL: ${LLM_BASE_URL}
       LLM_API_KEY: ${LLM_API_KEY}
       LLM_MODEL: ${LLM_MODEL}

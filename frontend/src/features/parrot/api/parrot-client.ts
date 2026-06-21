@@ -1,4 +1,5 @@
-import { api } from "@/lib/api-client";
+import { api, guestHeaders } from "@/lib/api-client";
+import { env } from "@/config/env";
 import {
   AdminMetricsResponseSchema,
   ChatHistoryResponseSchema,
@@ -13,20 +14,43 @@ import {
   type PostChatResponse,
 } from "@/features/parrot/types";
 
+function adminHeaders() {
+  return env.adminPasscode
+    ? { headers: { "X-Admin-Passcode": env.adminPasscode } }
+    : {};
+}
+
 export function getChatHistory(guestId: string): Promise<ChatHistoryResponse> {
-  return api.parrot.get(ChatHistoryResponseSchema, `/history/${guestId}`);
+  return api.parrot.get(
+    ChatHistoryResponseSchema,
+    `/history/${guestId}`,
+    guestHeaders(guestId)
+  );
 }
 
 export function postChat(body: PostChatRequest): Promise<PostChatResponse> {
-  return api.parrot.post(PostChatResponseSchema, "/chat", body);
+  return api.parrot.post(
+    PostChatResponseSchema,
+    "/chat",
+    body,
+    guestHeaders(body.guest_id)
+  );
 }
 
 export function getAdminMetrics(): Promise<AdminMetricsResponse> {
-  return api.parrot.get(AdminMetricsResponseSchema, "/admin/metrics");
+  return api.parrot.get(
+    AdminMetricsResponseSchema,
+    "/admin/metrics",
+    adminHeaders()
+  );
 }
 
 export function getConversations(): Promise<ConversationsListResponse> {
-  return api.parrot.get(ConversationsListResponseSchema, "/admin/conversations");
+  return api.parrot.get(
+    ConversationsListResponseSchema,
+    "/admin/conversations",
+    adminHeaders()
+  );
 }
 
 export function getConversationTranscript(
@@ -34,6 +58,7 @@ export function getConversationTranscript(
 ): Promise<ConversationTranscriptResponse> {
   return api.parrot.get(
     ConversationTranscriptResponseSchema,
-    `/admin/conversations/${guestId}`
+    `/admin/conversations/${guestId}`,
+    adminHeaders()
   );
 }

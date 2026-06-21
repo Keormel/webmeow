@@ -2,10 +2,12 @@ import { Router } from "express";
 import { v4 as uuid } from "uuid";
 import { broadcast } from "../eventBus.js";
 import { EventType } from "../types.js";
+import { requireServiceToken } from "../auth.js";
 
 const router = Router();
+const beachToken = process.env.BEACH_TOKEN ?? "";
 
-router.post("/full", (req, res) => {
+router.post("/full", requireServiceToken(beachToken), (req, res) => {
   const body = req.body;
 
   broadcast({
@@ -23,7 +25,7 @@ router.post("/full", (req, res) => {
   });
 });
 
-router.post("/available", (req, res) => {
+router.post("/available", requireServiceToken(beachToken), (req, res) => {
   const body = req.body;
 
   broadcast({

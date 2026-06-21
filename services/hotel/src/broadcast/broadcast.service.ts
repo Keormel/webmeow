@@ -5,6 +5,7 @@ import { HotelBroadcastEvent, HotelBroadcastEventType } from './hotel-events';
 export class BroadcastService {
   private readonly logger = new Logger(BroadcastService.name);
   private readonly broadcastServiceUrl = process.env.BROADCAST_SERVICE_URL;
+  private readonly broadcastToken = process.env.HOTEL_TOKEN ?? '';
 
   async publishHotelEvent(
     eventType: HotelBroadcastEventType,
@@ -15,11 +16,16 @@ export class BroadcastService {
     }
 
     try {
+      const headers: Record<string, string> = { 'content-type': 'application/json' };
+      if (this.broadcastToken) {
+        headers['X-Service-Token'] = this.broadcastToken;
+      }
+
       const response = await fetch(
         `${this.broadcastServiceUrl}${this.getEndpointForEvent(eventType)}`,
         {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers,
           body: JSON.stringify({ type: eventType, payload: event }),
         },
       );

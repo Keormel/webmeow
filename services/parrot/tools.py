@@ -90,10 +90,25 @@ _DISPATCH = {
     "get_guest_journey_status": lambda *, guest_id, **_: get_guest_journey_status(guest_id),
 }
 
+_GUEST_TOOLS = frozenset({
+    "get_guest_arrival_status",
+    "get_guest_reservation",
+    "get_guest_journey_status",
+})
+
+
 async def execute_tool(name: str, arguments: dict, allowed_guest_id: str | None) -> str:
     fn = _DISPATCH.get(name)
     if fn is None:
         return json.dumps({"error": f"Unknown tool: {name}"})
+
+    if name in _GUEST_TOOLS:
+        if not allowed_guest_id:
+            return json.dumps({"error": "Guest context required"})
+        requested_id = arguments.get("guest_id")
+        if requested_id and requested_id != allowed_guest_id:
+            return json.dumps({"error": "Not authorized to access this guest's data"})
+        arguments = {**arguments, "guest_id": allowed_guest_id}
 
     try:
         return await fn(**arguments)

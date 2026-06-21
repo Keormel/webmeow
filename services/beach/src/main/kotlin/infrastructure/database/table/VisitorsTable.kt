@@ -8,5 +8,7 @@ object VisitorsTable : Table("visitors") {
 
     val checkedIn = bool("checked_in")
 
+    val tokenBalance = integer("token_balance").default(0)
+
     override val primaryKey = PrimaryKey(id)
 }

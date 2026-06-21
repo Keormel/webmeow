@@ -12,5 +12,7 @@ object ActivityTable : Table("activities") {
 
     val capacity = integer("capacity")
 
+    val tokenCost = integer("token_cost").default(2)
+
     override val primaryKey = PrimaryKey(id)
 }

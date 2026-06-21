@@ -10,6 +10,13 @@ arrival_schema = ArrivalSchema()
 arrivals_schema = ArrivalSchema(many=True)
 
 
+def _assert_guest_match(guest_id: str):
+    header_id = request.headers.get("X-Guest-Id")
+    if not header_id or header_id != guest_id:
+        return jsonify({"error": "Forbidden"}), 403
+    return None
+
+
 def register_routes(app):
 
     @app.route("/arrivals", methods=["POST"])
@@ -23,11 +30,19 @@ def register_routes(app):
         except ValidationError as err:
             return jsonify({"errors": err.messages}), 400
 
+        denied = _assert_guest_match(guest["guest_id"])
+        if denied:
+            return denied
+
         result = app.gate_manager.assign_and_enqueue(guest)
         return jsonify(result), 202
 
     @app.route("/arrivals/<guest_id>", methods=["GET"])
     def get_arrival(guest_id):
+        denied = _assert_guest_match(guest_id)
+        if denied:
+            return denied
+
         guest = app.gate_manager.get_guest(guest_id)
         if not guest:
             return jsonify({

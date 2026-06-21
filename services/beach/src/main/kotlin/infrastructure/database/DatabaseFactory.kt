@@ -2,6 +2,7 @@ package com.hackathon.summer.faf.infrastructure.database
 
 import com.hackathon.summer.faf.infrastructure.database.table.ActivityTable
 import com.hackathon.summer.faf.infrastructure.database.table.ActivityBookingTable
+import com.hackathon.summer.faf.infrastructure.database.table.TokenCreditTable
 import com.hackathon.summer.faf.infrastructure.database.table.VisitorsTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -41,7 +42,15 @@ object DatabaseFactory {
 
         transaction {
 
-            SchemaUtils.create(ActivityTable, VisitorsTable, ActivityBookingTable)
+            SchemaUtils.create(
+                ActivityTable,
+                VisitorsTable,
+                ActivityBookingTable,
+                TokenCreditTable,
+            )
+
+            exec("ALTER TABLE visitors ADD COLUMN IF NOT EXISTS token_balance INT NOT NULL DEFAULT 0")
+            exec("ALTER TABLE activities ADD COLUMN IF NOT EXISTS token_cost INT NOT NULL DEFAULT 2")
         }
     }
 }

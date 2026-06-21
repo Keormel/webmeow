@@ -21,6 +21,7 @@ class PostgresActivityRepository : ActivityRepository {
             name = row[ActivityTable.name],
             description = row[ActivityTable.description],
             capacity = row[ActivityTable.capacity],
+            tokenCost = row[ActivityTable.tokenCost],
             bookedVisitors = bookedVisitors
         )
     }
@@ -148,6 +149,7 @@ class PostgresActivityRepository : ActivityRepository {
                     it[name] = activity.name
                     it[description] = activity.description
                     it[capacity] = activity.capacity
+                    it[tokenCost] = activity.tokenCost
                 }
 
             } else {
@@ -158,6 +160,7 @@ class PostgresActivityRepository : ActivityRepository {
                     it[name] = activity.name
                     it[description] = activity.description
                     it[capacity] = activity.capacity
+                    it[tokenCost] = activity.tokenCost
                 }
             }
         }

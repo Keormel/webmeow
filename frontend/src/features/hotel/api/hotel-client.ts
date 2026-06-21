@@ -1,5 +1,8 @@
-import { api } from "@/lib/api-client";
-import { checkInVisitor } from "@/features/beach/api/beach-client";
+import { api, guestHeaders } from "@/lib/api-client";
+import {
+  checkInVisitor,
+  checkOutVisitor,
+} from "@/features/beach/api/beach-client";
 import {
   ReservationSchema,
   ActiveReservationSchema,
@@ -12,7 +15,7 @@ import {
   type CancelReservationResponse,
 } from "@/features/hotel/types";
 
-function reservationGuestIds(reservation: Reservation): string[] {
+function reservationGuestIds(reservation: Reservation | ActiveReservation): string[] {
   return reservation.party_guest_ids?.length
     ? reservation.party_guest_ids
     : [reservation.guest_id];
@@ -26,7 +29,7 @@ export function postReservation(
   body: PostReservationRequest
 ): Promise<Reservation> {
   return api.hotel
-    .post(ReservationSchema, "/reservation", body)
+    .post(ReservationSchema, "/reservation", body, guestHeaders(body.guest_id))
     .then(async (reservation) => {
       await Promise.all(
         reservationGuestIds(reservation).map((guestId) =>
@@ -44,18 +47,20 @@ export function getReservationByGuest(
 ): Promise<ActiveReservation> {
   return api.hotel.get(
     ActiveReservationSchema,
-    `/reservation/by-guest/${guestId}`
+    `/reservation/by-guest/${guestId}`,
+    guestHeaders(guestId)
   );
 }
 
 export function cancelReservation(
-  id: string
+  id: string,
+  guestId: string
 ): Promise<CancelReservationResponse> {
   return api.hotel
-    .delete(CancelReservationResponseSchema, `/reservation/${id}`)
+    .delete(CancelReservationResponseSchema, `/reservation/${id}`, guestHeaders(guestId))
     .then(async (reservation) => {
       const activeReservation = await api.hotel
-        .get(ActiveReservationSchema, `/reservation/${id}`)
+        .get(ActiveReservationSchema, `/reservation/${id}`, guestHeaders(guestId))
         .catch(() => null);
 
       if (activeReservation) {

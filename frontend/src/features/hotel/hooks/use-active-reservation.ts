@@ -52,7 +52,7 @@ export function useActiveReservation() {
   }, [creditReservationTokens, query.data]);
 
   const mutation = useMutation({
-    mutationFn: (id: string) => cancelReservation(id),
+    mutationFn: (id: string) => cancelReservation(id, guest!.id),
     onSuccess: () => {
       if (guest) {
         checkOutVisitor(guest.id).catch(() => {

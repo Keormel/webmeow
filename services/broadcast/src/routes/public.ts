@@ -2,10 +2,12 @@ import { Router } from "express";
 import { v4 as uuid } from "uuid";
 import { broadcast } from "../eventBus.js";
 import { EventType } from "../types.js";
+import { requireServiceToken } from "../auth.js";
 
 const router = Router();
+const feToken = process.env.FE_TOKEN ?? "";
 
-router.post("/", (req, res) => {
+router.post("/", requireServiceToken(feToken), (req, res) => {
   const { guestName, message } = req.body;
 
   broadcast({

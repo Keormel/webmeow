@@ -7,6 +7,10 @@ import { env } from "@/config/env";
 export type ApiError = { ok: false; status: number; message: string };
 export type ApiResult<T> = { ok: true; data: T } | ApiError;
 
+export function guestHeaders(guestId: string | undefined): AxiosRequestConfig {
+  return guestId ? { headers: { "X-Guest-Id": guestId } } : {};
+}
+
 // Extraxts a human message out of an error field that may be a string, an array
 // of strings, or an array of objects.
 function extractField(value: unknown): string | null {
@@ -64,11 +68,12 @@ function createJsonApi(basePath = "") {
   }
 
   return {
-    get: <T>(schema: ZodType<T>, url: string) => request(schema, { url }),
-    post: <T>(schema: ZodType<T>, url: string, data: unknown) =>
-      request(schema, { url, method: "POST", data }),
-    delete: <T>(schema: ZodType<T>, url: string) =>
-      request(schema, { url, method: "DELETE" }),
+    get: <T>(schema: ZodType<T>, url: string, config?: AxiosRequestConfig) =>
+      request(schema, { ...config, url }),
+    post: <T>(schema: ZodType<T>, url: string, data: unknown, config?: AxiosRequestConfig) =>
+      request(schema, { ...config, url, method: "POST", data }),
+    delete: <T>(schema: ZodType<T>, url: string, config?: AxiosRequestConfig) =>
+      request(schema, { ...config, url, method: "DELETE" }),
   };
 }
 

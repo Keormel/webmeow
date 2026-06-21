@@ -5,14 +5,12 @@ import com.hackathon.summer.faf.domain.repository.VisitorRepository
 import domain.error.ActivityErrors
 import domain.error.VisitorErrors
 
-
 class BookActivityUseCase(
     private val activityRepository: ActivityRepository,
-    private val visitorRepository: VisitorRepository
+    private val visitorRepository: VisitorRepository,
 ) {
 
     fun execute(activityId: String, visitorId: String): String? {
-
         if (visitorId.isBlank()) {
             return VisitorErrors.VISITOR_MISSING_ID
         }
@@ -37,6 +35,14 @@ class BookActivityUseCase(
 
         if (activity.isFull()) {
             return ActivityErrors.ACTIVITY_FULL
+        }
+
+        if (visitor.tokenBalance < activity.tokenCost) {
+            return VisitorErrors.VISITOR_INSUFFICIENT_TOKENS
+        }
+
+        if (!visitorRepository.deductTokens(visitorId, activity.tokenCost)) {
+            return VisitorErrors.VISITOR_INSUFFICIENT_TOKENS
         }
 
         activityRepository.book(activityId, visitorId)

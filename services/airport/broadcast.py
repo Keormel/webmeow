@@ -1,5 +1,5 @@
 import requests
-from config import BROADCAST_SERVICE_URL, INTERNAL_SECRET
+from config import AIRPORT_TOKEN, BROADCAST_SERVICE_URL, INTERNAL_SECRET
 
 
 class BroadcastClient:
@@ -10,10 +10,14 @@ class BroadcastClient:
 
     def __init__(self):
         self.url = BROADCAST_SERVICE_URL
-        self.secret = INTERNAL_SECRET
+        self.token = AIRPORT_TOKEN or INTERNAL_SECRET
 
     def publish_event(self, result: dict):
         """Publish a guest-processed event. Never raises exceptions."""
+        headers = {"Content-Type": "application/json"}
+        if self.token:
+            headers["X-Service-Token"] = self.token
+
         try:
             requests.post(
                 f"{self.url}/airport/arrival",
@@ -42,7 +46,7 @@ class BroadcastClient:
                         "wait_time_seconds": result["wait_time_seconds"],
                     },
                 },
-                headers={"X-Internal-Key": self.secret, "Content-Type": "application/json"},
+                headers=headers,
                 timeout=2,
             )
         except Exception:

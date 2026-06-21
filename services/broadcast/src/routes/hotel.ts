@@ -2,11 +2,12 @@ import { Router } from "express";
 import { v4 as uuid } from "uuid";
 import { broadcast } from "../eventBus.js";
 import { EventType } from "../types.js";
-
+import { requireServiceToken } from "../auth.js";
 
 const router = Router();
+const hotelToken = process.env.HOTEL_TOKEN ?? "";
 
-router.post("/confirm", (req, res) => {
+router.post("/confirm", requireServiceToken(hotelToken), (req, res) => {
   const body = req.body;
 
   broadcast({
@@ -24,7 +25,7 @@ router.post("/confirm", (req, res) => {
   });
 });
 
-router.post("/cancel", (req, res) => {
+router.post("/cancel", requireServiceToken(hotelToken), (req, res) => {
   const body = req.body;
 
   broadcast({

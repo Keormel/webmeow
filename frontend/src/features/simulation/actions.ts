@@ -144,10 +144,11 @@ export async function cancelBeachActivity(
 }
 
 export async function cancelHotelReservation(
-  reservationId: string
+  reservationId: string,
+  guest: GuestProfile
 ): Promise<void> {
   try {
-    await cancelReservation(reservationId);
+    await cancelReservation(reservationId, guest.id);
   } catch {
     // best-effort simulation traffic
   }

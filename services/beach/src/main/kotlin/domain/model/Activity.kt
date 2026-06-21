@@ -5,6 +5,7 @@ data class Activity(
     val name: String,
     val description: String?,
     val capacity: Int,
+    val tokenCost: Int = 2,
     val bookedVisitors: MutableSet<String> = mutableSetOf()
 ) {
 

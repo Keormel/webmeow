@@ -1,10 +1,13 @@
 package com.hackathon.summer.faf.presentation.controller
 
-
 import com.hackathon.summer.faf.application.usecase.BookActivityUseCase
 import com.hackathon.summer.faf.application.usecase.CancelActivityUseCase
+import com.hackathon.summer.faf.application.usecase.CreditTokensUseCase
 import com.hackathon.summer.faf.domain.repository.ActivityRepository
 import com.hackathon.summer.faf.domain.repository.VisitorRepository
+import com.hackathon.summer.faf.presentation.auth.requireGuestMatch
+import com.hackathon.summer.faf.presentation.auth.requireServiceToken
+import com.hackathon.summer.faf.presentation.request.TokenCreditRequest
 import com.hackathon.summer.faf.presentation.request.VisitorRequest
 import com.hackathon.summer.faf.presentation.response.ActivityResponse
 import com.hackathon.summer.faf.presentation.response.ErrorResponse
@@ -14,14 +17,14 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.*
-
 
 class ActivityController(
     private val activityRepository: ActivityRepository,
     private val visitorRepository: VisitorRepository,
     private val bookActivityUseCase: BookActivityUseCase,
-    private val cancelActivityUseCase: CancelActivityUseCase
+    private val cancelActivityUseCase: CancelActivityUseCase,
+    private val creditTokensUseCase: CreditTokensUseCase,
+    private val hotelServiceToken: String,
 ) {
 
     private suspend fun respondError(call: ApplicationCall, error: String) {
@@ -35,6 +38,7 @@ class ActivityController(
             VisitorErrors.VISITOR_ALREADY_BOOKED_OTHER_ACTIVITY -> HttpStatusCode.Conflict
 
             VisitorErrors.VISITOR_NOT_CHECKED_IN -> HttpStatusCode.Forbidden
+            VisitorErrors.VISITOR_INSUFFICIENT_TOKENS -> HttpStatusCode.PaymentRequired
 
             else -> HttpStatusCode.BadRequest
         }
@@ -43,7 +47,6 @@ class ActivityController(
     }
 
     suspend fun book(call: ApplicationCall) {
-
         val activityId = call.parameters["activity_id"]
 
         if (activityId.isNullOrBlank()) {
@@ -52,10 +55,13 @@ class ActivityController(
         }
 
         val request = call.receive<VisitorRequest>()
+        if (!call.requireGuestMatch(request.id)) {
+            return
+        }
 
         val error = bookActivityUseCase.execute(
             activityId = activityId,
-            visitorId = request.id
+            visitorId = request.id,
         )
 
         if (error != null) {
@@ -65,12 +71,11 @@ class ActivityController(
 
         call.respond(
             HttpStatusCode.OK,
-            mapOf("status" to "booked")
+            mapOf("status" to "booked"),
         )
     }
 
     suspend fun cancel(call: ApplicationCall) {
-
         val activityId = call.parameters["activity_id"]
 
         if (activityId.isNullOrBlank()) {
@@ -79,10 +84,13 @@ class ActivityController(
         }
 
         val request = call.receive<VisitorRequest>()
+        if (!call.requireGuestMatch(request.id)) {
+            return
+        }
 
         val error = cancelActivityUseCase.execute(
             activityId = activityId,
-            visitorId = request.id
+            visitorId = request.id,
         )
 
         if (error != null) {
@@ -92,12 +100,11 @@ class ActivityController(
 
         call.respond(
             HttpStatusCode.OK,
-            mapOf("status" to "cancelled")
+            mapOf("status" to "cancelled"),
         )
     }
 
     suspend fun getActivityByGuest(call: ApplicationCall) {
-
         val visitorId = call.parameters["visitor_id"]
 
         if (visitorId.isNullOrBlank()) {
@@ -105,16 +112,19 @@ class ActivityController(
             return
         }
 
+        if (!call.requireGuestMatch(visitorId)) {
+            return
+        }
+
         val activity = activityRepository.findByBookedVisitor(visitorId)
 
         call.respond(
             HttpStatusCode.OK,
-            mapOf("activity_id" to activity?.id)
+            mapOf("activity_id" to activity?.id),
         )
     }
 
     suspend fun getActivity(call: ApplicationCall) {
-
         val activityId = call.parameters["activity_id"]
 
         if (activityId.isNullOrBlank()) {
@@ -136,29 +146,56 @@ class ActivityController(
                 activity_name = activity.name,
                 description = activity.description,
                 capacity = activity.capacity,
-                remaining = activity.remaining()
-            )
+                remaining = activity.remaining(),
+            ),
         )
     }
 
     suspend fun getActivities(call: ApplicationCall) {
-
         val activities = activityRepository.findAll()
 
         val response = activities.map { activity ->
-
             ActivityResponse(
                 activity_id = activity.id,
                 activity_name = activity.name,
                 description = activity.description,
                 capacity = activity.capacity,
-                remaining = activity.remaining()
+                remaining = activity.remaining(),
             )
         }
 
         call.respond(
             HttpStatusCode.OK,
-            mapOf("activities" to response)
+            mapOf("activities" to response),
+        )
+    }
+
+    suspend fun creditTokens(call: ApplicationCall) {
+        if (!call.requireServiceToken(hotelServiceToken)) {
+            return
+        }
+
+        val visitorId = call.parameters["visitor_id"]
+        if (visitorId.isNullOrBlank()) {
+            respondError(call, VisitorErrors.VISITOR_MISSING_ID)
+            return
+        }
+
+        val request = call.receive<TokenCreditRequest>()
+        val error = creditTokensUseCase.execute(
+            visitorId = visitorId,
+            reservationId = request.reservation_id,
+            amount = request.amount,
+        )
+
+        if (error != null) {
+            respondError(call, error)
+            return
+        }
+
+        call.respond(
+            HttpStatusCode.OK,
+            mapOf("status" to "credited"),
         )
     }
 

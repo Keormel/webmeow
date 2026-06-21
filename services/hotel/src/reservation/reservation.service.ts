@@ -1,9 +1,15 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import {
   ReservationStatus,
   RoomType,
 } from '../../generated/prisma/client.js';
 import { AirportService } from '../airport/airport.service';
+import { BeachService } from '../beach/beach.service';
 import { BroadcastService } from '../broadcast/broadcast.service';
 import { HotelBroadcastEventType } from '../broadcast/hotel-events';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,12 +29,28 @@ type ReservationWithRoomAndGuests = {
   guests: { guest_id: string }[];
 };
 
+const ROOM_TOKEN_ALLOWANCE_PER_NIGHT: Record<RoomType, number> = {
+  STANDARD: 4,
+  DELUXE: 8,
+  SUITE: 16,
+};
+
+function getReservationTokenAllowance(
+  roomType: RoomType,
+  checkInDay: number,
+  checkOutDay: number,
+): number {
+  const nights = Math.max(1, checkOutDay - checkInDay);
+  return ROOM_TOKEN_ALLOWANCE_PER_NIGHT[roomType] * nights;
+}
+
 @Injectable()
 export class ReservationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly broadcast: BroadcastService,
     private readonly airport: AirportService,
+    private readonly beach: BeachService,
   ) {}
 
   async create(
@@ -128,6 +150,16 @@ export class ReservationService {
       },
     );
 
+    await this.beach.creditReservationTokens(
+      reservation.guest_id,
+      reservation.id,
+      getReservationTokenAllowance(
+        availableRoom.type,
+        reservation.check_in_day,
+        reservation.check_out_day,
+      ),
+    );
+
     return this.toReservationResponse(reservation);
   }
 
@@ -207,8 +239,18 @@ export class ReservationService {
     reservation: Pick<ReservationWithRoomAndGuests, 'guest_id' | 'guests'>,
   ): string[] {
     const partyGuestIds = reservation.guests.map((guest) => guest.guest_id);
-
     return partyGuestIds.length > 0 ? partyGuestIds : [reservation.guest_id];
+  }
+
+  private assertReservationGuest(
+    reservation: ReservationWithRoomAndGuests,
+    guestId: string,
+  ): void {
+    if (!this.partyGuestIdsFromReservation(reservation).includes(guestId)) {
+      throw new ForbiddenException({
+        error: 'Not authorized for this reservation',
+      });
+    }
   }
 
   private toReservationResponse(
@@ -227,7 +269,10 @@ export class ReservationService {
     };
   }
 
-  async findById(id: string): Promise<ReservationResponseDto> {
+  async findById(
+    id: string,
+    guestId?: string,
+  ): Promise<ReservationResponseDto> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id },
       include: {
@@ -241,6 +286,10 @@ export class ReservationService {
         { error: 'Reservation not found' },
         HttpStatus.NOT_FOUND,
       );
+    }
+
+    if (guestId) {
+      this.assertReservationGuest(reservation, guestId);
     }
 
     return this.toReservationResponse(reservation);
@@ -272,10 +321,16 @@ export class ReservationService {
     return this.toReservationResponse(reservation);
   }
 
-  async cancel(id: string): Promise<CancelReservationResponseDto> {
+  async cancel(
+    id: string,
+    guestId: string,
+  ): Promise<CancelReservationResponseDto> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id },
-      include: { room: true },
+      include: {
+        room: true,
+        guests: { orderBy: { guest_id: 'asc' } },
+      },
     });
 
     if (!reservation) {
@@ -284,6 +339,8 @@ export class ReservationService {
         HttpStatus.NOT_FOUND,
       );
     }
+
+    this.assertReservationGuest(reservation, guestId);
 
     if (reservation.status === ReservationStatus.CANCELLED) {
       throw new HttpException(

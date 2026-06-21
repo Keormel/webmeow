@@ -26,6 +26,7 @@ Thumbs.db
 
 # Environment files
 .env
+.env.docker
 
 # Application secrets
 application-local.yaml
@@ -62,6 +63,9 @@ jacoco.exec
 # Test reports
 test-results/
 reports/
+
+# Local security audit scripts (run locally, do not commit)
+scripts/security/
 
 # Package archives
 *.jar

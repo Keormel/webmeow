@@ -20,42 +20,40 @@ func main() {
 
 	// Global middleware (applied to ALL routes)
 	r.Use(chimw.RequestID)
-	r.Use(chimw.RealIP)
 	r.Use(RequestLogger)
 	r.Use(chimw.Recoverer)
 	r.Use(CORSMiddleware(cfg.CORSOrigins))
 	rl := NewRateLimiter(cfg.RateLimitPerWindow, cfg.RateLimitWindow)
+	// Rate limit before RealIP so client-supplied X-Forwarded-For cannot bypass limits.
 	r.Use(RateLimitMiddleware(rl))
+	r.Use(chimw.RealIP)
 
 	// Health check (aggregates all backend health endpoints)
 	r.Get("/health", HealthHandler(cfg))
 
-	// Protected routes require X-Internal-Key when INTERNAL_SECRET is set.
+	// Public API proxy — browser traffic enters here without a shared secret.
+	pools := map[string][]string{
+		"/api/airport":   cfg.AirportServicePool,
+		"/api/hotel":     cfg.HotelServicePool,
+		"/api/beach":     cfg.BeachServicePool,
+		"/api/broadcast": cfg.BroadcastServicePool,
+		"/api/parrot":    cfg.ParrotServicePool,
+	}
+	for prefix, pool := range pools {
+		switch len(pool) {
+		case 0:
+			// Service not configured — leave it unregistered so it 404s.
+		case 1:
+			r.Route(prefix, withRouteMiddleware(ProxyRoute(pool[0]), cfg))
+		default:
+			r.Route(prefix, withRouteMiddleware(PooledProxyRoute(pool), cfg))
+		}
+	}
+
+	// Admin routes require X-Internal-Key when INTERNAL_SECRET is set.
 	r.Group(func(r chi.Router) {
 		r.Use(AuthMiddleware(cfg.InternalSecret))
-
-		// Admin: adjust the rate limiter at runtime.
 		r.Put("/admin/rate-limit", AdminRateLimitHandler(rl))
-
-		// Route to backend services. Each *_SERVICE_URL may list several instances
-		// (comma-separated); a pool with more than one URL is round-robined.
-		pools := map[string][]string{
-			"/api/airport":   cfg.AirportServicePool,
-			"/api/hotel":     cfg.HotelServicePool,
-			"/api/beach":     cfg.BeachServicePool,
-			"/api/broadcast": cfg.BroadcastServicePool,
-			"/api/parrot":    cfg.ParrotServicePool,
-		}
-		for prefix, pool := range pools {
-			switch len(pool) {
-			case 0:
-				// Service not configured — leave it unregistered so it 404s.
-			case 1:
-				r.Route(prefix, withRouteMiddleware(ProxyRoute(pool[0]), cfg))
-			default:
-				r.Route(prefix, withRouteMiddleware(PooledProxyRoute(pool), cfg))
-			}
-		}
 	})
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
