@@ -139,10 +139,7 @@ function seedState(stage: SimGuestStage): SimGuestState {
 
 export function createInitialState(): GuestStates {
   return Object.fromEntries(
-    syntheticGuests.map((guest, i) => [
-      guest.id,
-      seedState(STAGES[i % STAGES.length]!),
-    ])
+    syntheticGuests.map((guest) => [guest.id, seedState("new")])
   );
 }
 

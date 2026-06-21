@@ -5,6 +5,8 @@ import {
 import {
   bookActivity,
   cancelActivity,
+  checkInVisitor,
+  getActivityByGuest,
   getActivities,
 } from "@/features/beach/api/beach-client";
 import {
@@ -107,6 +109,16 @@ export async function bookRandomActivity(
   guest: GuestProfile
 ): Promise<string | null> {
   try {
+    const reservation = await getReservationByGuest(guest.id);
+    if (!reservation) return null;
+
+    await checkInVisitor(reservation.guest_id);
+
+    const currentActivity = await getActivityByGuest(guest.id);
+    if (currentActivity.activity_id) {
+      return currentActivity.activity_id;
+    }
+
     const activities = await getActivities();
     const available = activities.activities.filter((a) => a.remaining > 0);
     if (available.length === 0) return null;

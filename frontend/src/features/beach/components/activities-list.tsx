@@ -80,7 +80,7 @@ export function ActivitiesList() {
                 isBooking={isBooking}
                 isCancelling={isCancelling}
                 onBook={() => book(activity.activity_id, tokenCost)}
-                onCancel={() => cancel(activity.activity_id)}
+                onCancel={() => cancel(activity.activity_id, tokenCost)}
               />
             }
           />

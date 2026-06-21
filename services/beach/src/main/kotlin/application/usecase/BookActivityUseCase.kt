@@ -33,8 +33,6 @@ class BookActivityUseCase(
             if (currentActivity.id == activityId) {
                 return ActivityErrors.ACTIVITY_ALREADY_BOOKED
             }
-
-            return VisitorErrors.VISITOR_ALREADY_BOOKED_OTHER_ACTIVITY
         }
 
         if (activity.isFull()) {
