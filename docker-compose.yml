@@ -25,6 +25,14 @@ services:
       timeout: 3s
       retries: 15
 
+  db-seed:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./docker/seed-beach.sh:/seed-beach.sh
+    entrypoint: ["/bin/sh", "/seed-beach.sh"]
   # ──────────── Gateway (Go) ────────────
   gateway:
     healthcheck:
