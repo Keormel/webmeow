@@ -176,4 +176,3 @@ volumes:
 
 networks:
   default:
-    name: ${COOLIFY_NETWORK:-p12x1y5qvvwckjpsb96dm911}
