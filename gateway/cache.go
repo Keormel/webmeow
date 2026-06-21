@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"container/list"
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"strings"
 	"sync"
@@ -109,8 +111,7 @@ type cacheCapture struct {
 func (c *cacheCapture) WriteHeader(code int) {
 	if !c.decided {
 		c.status = code
-		ct := c.Header().Get("Content-Type")
-		c.cacheable = code == http.StatusOK && !strings.HasPrefix(ct, "text/event-stream")
+		c.cacheable = responseCacheable(code, c.Header())
 		c.decided = true
 	}
 	c.ResponseWriter.WriteHeader(code)
@@ -132,6 +133,50 @@ func (c *cacheCapture) Flush() {
 	}
 }
 
+// cacheKey scopes entries by method, path, query, and per-client credentials
+// so personalized responses are never shared across users.
+func cacheKey(r *http.Request) string {
+	key := r.Method + " " + r.URL.Path + "?" + r.URL.Query().Encode()
+
+	var scope []string
+	for _, part := range []struct {
+		label string
+		value string
+	}{
+		{"auth", r.Header.Get("Authorization")},
+		{"cookie", r.Header.Get("Cookie")},
+		{"key", r.Header.Get("X-Internal-Key")},
+	} {
+		if part.value != "" {
+			sum := sha256.Sum256([]byte(part.value))
+			scope = append(scope, part.label+"="+hex.EncodeToString(sum[:8]))
+		}
+	}
+	if len(scope) > 0 {
+		key += "|" + strings.Join(scope, "|")
+	}
+	return key
+}
+
+// responseCacheable reports whether a backend response may be stored in the
+// shared gateway cache. Private or session-bound responses are excluded.
+func responseCacheable(status int, h http.Header) bool {
+	if status != http.StatusOK {
+		return false
+	}
+	if strings.HasPrefix(h.Get("Content-Type"), "text/event-stream") {
+		return false
+	}
+	if len(h.Values("Set-Cookie")) > 0 {
+		return false
+	}
+	cc := strings.ToLower(h.Get("Cache-Control"))
+	if strings.Contains(cc, "private") || strings.Contains(cc, "no-store") {
+		return false
+	}
+	return true
+}
+
 // CacheMiddleware caches safe responses (GET/HEAD, status 200, non-streaming)
 // for ttl. No-op when ttl <= 0 or maxEntries <= 0.
 func CacheMiddleware(ttl time.Duration, maxEntries, maxBodyBytes int) func(http.Handler) http.Handler {
@@ -147,9 +192,7 @@ func CacheMiddleware(ttl time.Duration, maxEntries, maxBodyBytes int) func(http.
 				return
 			}
 
-			// Key on method + path + canonicalized query so requests that
-			// differ only by query string don't collide.
-			key := r.Method + " " + r.URL.Path + "?" + r.URL.Query().Encode()
+			key := cacheKey(r)
 
 			if e, ok := cache.get(key); ok {
 				for k, vals := range e.header {
@@ -166,7 +209,7 @@ func CacheMiddleware(ttl time.Duration, maxEntries, maxBodyBytes int) func(http.
 			cc := &cacheCapture{ResponseWriter: w}
 			next.ServeHTTP(cc, r)
 
-			if cc.cacheable {
+			if cc.cacheable && responseCacheable(cc.status, w.Header()) {
 				cache.set(key, cacheEntry{
 					status: cc.status,
 					header: w.Header().Clone(),

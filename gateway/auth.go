@@ -2,21 +2,26 @@ package main
 
 import (
 	"net/http"
-	"os"
 )
 
-// AuthMiddleware admits service-to-service calls that present a valid
-// X-Internal-Key and passes all other requests through to the next handler.
-func AuthMiddleware(next http.Handler) http.Handler {
-	internalSecret := os.Getenv("INTERNAL_SECRET")
+// AuthMiddleware requires a valid X-Internal-Key when secret is configured.
+// When secret is empty, auth is disabled and all requests pass through.
+func AuthMiddleware(secret string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if secret == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Service-to-service calls with a valid internal key are allowed.
-		if key := r.Header.Get("X-Internal-Key"); key != "" && key == internalSecret {
-			next.ServeHTTP(w, r)
-			return
-		}
+			if key := r.Header.Get("X-Internal-Key"); key == secret {
+				next.ServeHTTP(w, r)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error": "Unauthorized"}`))
+		})
+	}
 }
