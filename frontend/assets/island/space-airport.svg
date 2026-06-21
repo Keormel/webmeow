@@ -1,0 +1,11 @@
+<svg width="251" height="114" viewBox="0 0 251 114" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="24" y="33" width="170" height="58" rx="17" fill="#5E6268"/><rect x="56" y="21" width="88" height="26" rx="13" fill="#4B5058"/>
+<path d="M76 43h42M62 56h26M97 56h31M54 69h43" stroke="#E9EEF2" stroke-width="3" stroke-linecap="round"/>
+<path d="M121 61c14-15 31-25 55-29l39-7-14 24c19 2 31 9 35 18-18 7-43 9-68 7-19-2-34-5-47-13z" fill="#E8F3F8"/>
+<path d="M170 34l42-9-18 24c-12 1-21-4-24-15z" fill="#78D7F7"/>
+<path d="M121 61c21 7 52 10 93 7-31 10-69 9-93-7z" fill="#AEB8C5" opacity=".7"/>
+<ellipse cx="160" cy="52" rx="6" ry="4" fill="#103346"/><ellipse cx="176" cy="49" rx="6" ry="4" fill="#103346"/><ellipse cx="192" cy="47" rx="6" ry="4" fill="#103346"/>
+<path d="M237 66c8-4 11-7 14-13-1 13-3 22-15 29-2-5-2-10 1-16z" fill="#3EEBFF" opacity=".9"/>
+<path d="M237 66c13-1 24 2 31 9-12 0-21 2-32 7" fill="#54A8FF" opacity=".35"/>
+<rect x="140" y="69" width="34" height="8" rx="4" fill="#49D6E8"/><path d="M126 71l-21 14h45" fill="#CCD6E0"/>
+</svg>

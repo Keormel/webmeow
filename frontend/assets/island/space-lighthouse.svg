@@ -1,0 +1,9 @@
+<svg width="192" height="253" viewBox="0 0 192 253" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M38 205h116c12 0 22 10 22 22v7H16v-7c0-12 10-22 22-22z" fill="#6E6962"/><path d="M57 191h72l17 21H40l17-21z" fill="#81776D"/>
+<path d="M79 56h35l18 135H61L79 56z" fill="#E9EEF2"/><path d="M83 84h38l6 42c-15 13-36 21-58 24l14-66z" fill="#C9D7DD" opacity=".9"/>
+<path d="M75 56h43v-9H75v9z" fill="#6E9BAF"/><path d="M83 30h28v18H83z" fill="#E9EEF2"/><path d="M83 30l14-10 14 10H83z" fill="#7FB7CF"/>
+<rect x="88" y="101" width="23" height="37" rx="3" fill="#153246"/><path d="M91 119h17M99 104v31" stroke="#E9EEF2" stroke-width="2" opacity=".7"/>
+<path d="M72 77h50M68 154h62" stroke="#818B91" stroke-width="5"/>
+<path d="M119 48C145 34 167 25 188 21c-14 15-34 30-66 43" fill="#8EEBFF" opacity=".35"/><path d="M73 48C47 34 25 25 4 21c14 15 34 30 66 43" fill="#8EEBFF" opacity=".35"/>
+<circle cx="97" cy="47" r="9" fill="#FFE680"/><path d="M27 206l20-35 20 35M125 206l15-26 15 26" fill="#898075"/><path d="M47 171l9 16H38l9-16zM140 180l7 13h-14l7-13z" fill="#D8D8D2"/>
+</svg>

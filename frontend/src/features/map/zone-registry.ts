@@ -6,12 +6,22 @@ import {
   IconFeather,
   IconBuildingLighthouse,
 } from "@tabler/icons-react";
+import islandBg from "@/assets/island-bg.svg";
+import oceanBg from "@/assets/ocean-bg.svg";
 import airportZoneArt from "@/assets/zones/airport.svg";
 import beachZoneArt from "@/assets/zones/beach.svg";
 import hotelZoneArt from "@/assets/zones/hotel.svg";
 import lighthouseZoneArt from "@/assets/zones/lighthouse.svg";
 import parrotZoneArt from "@/assets/zones/parrot.svg";
-import { ZoneId } from "@/features/map/constants";
+import alienArt from "../../../assets/island/alien.svg";
+import alienIslandBg from "../../../assets/island/moon-island-bg.svg";
+import spaceAirportZoneArt from "../../../assets/island/space-airport.svg";
+import spaceBeachZoneArt from "../../../assets/island/space-beach.svg";
+import spaceHotelZoneArt from "../../../assets/island/space-hotel.svg";
+import spaceLighthouseZoneArt from "../../../assets/island/space-lighthouse.svg";
+import spaceOceanBg from "../../../assets/island/space-ocean-bg.svg";
+import spaceParrotZoneArt from "../../../assets/island/space-parrot.svg";
+import { IslandId, ZoneId } from "@/features/map/constants";
 import { ChannelId } from "@/types/broadcast";
 
 export interface ZoneDefinition {
@@ -28,6 +38,32 @@ export interface ZoneDefinition {
   accent: string;
   markerSrc: string;
   markerScale?: number;
+}
+
+export interface IslandZonePlacement {
+  position: ZoneDefinition["position"];
+  markerSrc: string;
+  markerScale?: number;
+}
+
+export interface IslandDecoration {
+  src: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  width: number;
+}
+
+export interface IslandDefinition {
+  id: IslandId;
+  title: string;
+  oceanSrc: string;
+  mapSrc: string;
+  mapAlt: string;
+  tone: "light" | "dark";
+  zones: Record<ZoneId, IslandZonePlacement>;
+  decorations?: IslandDecoration[];
 }
 
 export const ZONE_REGISTRY: Record<ZoneId, ZoneDefinition> = {
@@ -89,8 +125,9 @@ export const ZONE_REGISTRY: Record<ZoneId, ZoneDefinition> = {
   },
   [ZoneId.Broadcast]: {
     id: ZoneId.Broadcast,
-    label: "Lighhouse",
-    description: "Resort-wide announcements broadcast to every guest on the island.",
+    label: "Lighthouse",
+    description:
+      "Resort-wide announcements broadcast to every guest on the island.",
     adminDescription:
       "Observe the full island-wide event stream from every service.",
     icon: IconBuildingLighthouse,
@@ -102,6 +139,85 @@ export const ZONE_REGISTRY: Record<ZoneId, ZoneDefinition> = {
   },
 };
 
+function getZonePlacement(zone: ZoneDefinition): IslandZonePlacement {
+  return {
+    position: zone.position,
+    markerSrc: zone.markerSrc,
+    markerScale: zone.markerScale,
+  };
+}
+
+export const ISLAND_REGISTRY: Record<IslandId, IslandDefinition> = {
+  [IslandId.Purrlington]: {
+    id: IslandId.Purrlington,
+    title: "Purrlington",
+    oceanSrc: oceanBg,
+    mapSrc: islandBg,
+    mapAlt: "Purrlington island map",
+    tone: "light",
+    zones: {
+      [ZoneId.Airport]: getZonePlacement(ZONE_REGISTRY[ZoneId.Airport]),
+      [ZoneId.Hotel]: getZonePlacement(ZONE_REGISTRY[ZoneId.Hotel]),
+      [ZoneId.Beach]: getZonePlacement(ZONE_REGISTRY[ZoneId.Beach]),
+      [ZoneId.Parrot]: getZonePlacement(ZONE_REGISTRY[ZoneId.Parrot]),
+      [ZoneId.Broadcast]: getZonePlacement(ZONE_REGISTRY[ZoneId.Broadcast]),
+    },
+  },
+  [IslandId.Alien]: {
+    id: IslandId.Alien,
+    title: "Alien Island",
+    oceanSrc: spaceOceanBg,
+    mapSrc: alienIslandBg,
+    mapAlt: "Alien island map",
+    tone: "dark",
+    zones: {
+      [ZoneId.Airport]: {
+        position: { x: 1600, y: 330 },
+        markerSrc: spaceAirportZoneArt,
+        markerScale: 2,
+      },
+      [ZoneId.Hotel]: {
+        position: { x: 1740, y: 890 },
+        markerSrc: spaceHotelZoneArt,
+        markerScale: 1.65,
+      },
+      [ZoneId.Beach]: {
+        position: { x: 580, y: 1410 },
+        markerSrc: spaceBeachZoneArt,
+        markerScale: 1,
+      },
+      [ZoneId.Parrot]: {
+        position: { x: 2380, y: 1560 },
+        markerSrc: spaceParrotZoneArt,
+        markerScale: 1,
+      },
+      [ZoneId.Broadcast]: {
+        position: { x: 375, y: 890 },
+        markerSrc: spaceLighthouseZoneArt,
+        markerScale: 1.8,
+      },
+    },
+    decorations: [
+      {
+        src: alienArt,
+        position: { x: 2570, y: 430 },
+        width: 260,
+      },
+    ],
+  },
+};
+
 export function getZone(id: ZoneId) {
   return ZONE_REGISTRY[id];
+}
+
+export function getIsland(id: IslandId) {
+  return ISLAND_REGISTRY[id];
+}
+
+export function getIslandZone(id: ZoneId, islandId: IslandId) {
+  return {
+    ...getZone(id),
+    ...getIsland(islandId).zones[id],
+  };
 }
