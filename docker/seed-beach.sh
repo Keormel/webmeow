@@ -1,16 +1,14 @@
+#!/bin/bash
+# Seed the beach database with activity data.
+# Runs as part of /docker-entrypoint-initdb.d/ on first PostgreSQL init.
+set -e
 
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "beach" <<'EOSQL'
 CREATE TABLE IF NOT EXISTS activities (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     capacity INT NOT NULL
-);
-
-
-CREATE TABLE IF NOT EXISTS activity_bookings (
-    activity_id VARCHAR(50) NOT NULL,
-    visitor_id VARCHAR(50) NOT NULL,
-    PRIMARY KEY (activity_id, visitor_id)
 );
 
 INSERT INTO activities (id, name, description, capacity) VALUES
@@ -33,4 +31,6 @@ INSERT INTO activities (id, name, description, capacity) VALUES
 ('ACT017', 'Sailing Basics', 'Introduction to sailing techniques.', 10),
 ('ACT018', 'Beach Cleanup', 'Community environmental activity.', 50),
 ('ACT019', 'Meditation Session', 'Relaxing guided meditation by the sea.', 20),
-('ACT020', 'Sunset Cruise', 'Boat cruise during sunset hours.', 15);
+('ACT020', 'Sunset Cruise', 'Boat cruise during sunset hours.', 15)
+ON CONFLICT (id) DO NOTHING;
+EOSQL

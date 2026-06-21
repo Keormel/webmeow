@@ -1,4 +1,7 @@
-import { postArrival } from "@/features/airport/api/airport-client";
+import {
+  getArrivalStatus,
+  postArrival,
+} from "@/features/airport/api/airport-client";
 import {
   bookActivity,
   cancelActivity,
@@ -82,13 +85,18 @@ export async function askParrot(guest: GuestProfile): Promise<void> {
 
 export async function bookHotel(guest: GuestProfile): Promise<string | null> {
   try {
+    const arrival = await getArrivalStatus(guest.id);
+    if (arrival.status !== "processed") {
+      return null;
+    }
+
     const result = await postReservation(randomReservationBody(guest));
     return result.id;
   } catch {
     // stale sessionStorage reservation, recover the existing id
     try {
       const existing = await getReservationByGuest(guest.id);
-      return existing.id;
+      return existing?.id ?? null;
     } catch {
       return null;
     }

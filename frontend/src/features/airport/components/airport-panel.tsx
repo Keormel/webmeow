@@ -18,6 +18,7 @@ export function AirportPanel() {
   const events = useZoneEvents(ZoneId.Airport);
   const { onSubmit, result, isSubmitting } = useArrivalForm();
   const { data: arrivalStatus } = useArrivalStatus(guest?.id ?? null);
+  const hasArrival = arrivalStatus && arrivalStatus.status !== "not_started";
 
   if (isAdmin) {
     return (
@@ -32,7 +33,7 @@ export function AirportPanel() {
     <>
       {guest && <BoardingPass guest={guest} />}
 
-      {arrivalStatus ? (
+      {hasArrival ? (
         <ArrivalStatusCard status={arrivalStatus} />
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
