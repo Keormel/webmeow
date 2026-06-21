@@ -18,6 +18,7 @@ interface BookActivityVariables {
 
 interface CancelActivityVariables {
   activityId: string;
+  cost: number;
 }
 
 export function useBookActivity() {
@@ -73,7 +74,11 @@ export function useBookActivity() {
     onSuccess: (_, variables) => {
       if (!guest) return;
 
-      const refunded = refundActivityTokens(guest.id, variables.activityId);
+      const refunded = refundActivityTokens(
+        guest.id,
+        variables.activityId,
+        variables.cost
+      );
       if (refunded > 0) {
         toast.success(`${formatTokens(refunded)} returned`);
       }
@@ -98,7 +103,8 @@ export function useBookActivity() {
 
       bookMutation.mutate({ activityId, cost, currentActivityId });
     },
-    cancel: (activityId: string) => cancelMutation.mutate({ activityId }),
+    cancel: (activityId: string, cost: number) =>
+      cancelMutation.mutate({ activityId, cost }),
     isBooking: bookMutation.isPending,
     isCancelling: cancelMutation.isPending,
   };

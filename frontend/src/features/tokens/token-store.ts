@@ -26,7 +26,11 @@ interface TokenWalletState {
     cost: number,
     currentActivityId: string | null
   ) => boolean;
-  refundActivityTokens: (guestId: string, activityId: string) => number;
+  refundActivityTokens: (
+    guestId: string,
+    activityId: string,
+    fallbackCost?: number
+  ) => number;
 }
 
 const EMPTY_WALLET_STATE = {
@@ -120,10 +124,25 @@ export const useTokenWalletStore = create<TokenWalletState>()(
         return true;
       },
 
-      refundActivityTokens: (guestId, activityId) => {
+      refundActivityTokens: (guestId, activityId, fallbackCost = 0) => {
         const trackedBooking = get().activityBookings[guestId];
 
-        if (trackedBooking?.activityId !== activityId) return 0;
+        if (trackedBooking?.activityId !== activityId) {
+          if (trackedBooking || fallbackCost <= 0) return 0;
+
+          set((state) => ({
+            balances: {
+              ...state.balances,
+              [guestId]: (state.balances[guestId] ?? 0) + fallbackCost,
+            },
+            activityBookings: {
+              ...state.activityBookings,
+              [guestId]: null,
+            },
+          }));
+
+          return fallbackCost;
+        }
 
         set((state) => ({
           balances: {

@@ -1,8 +1,5 @@
 import { api } from "@/lib/api-client";
-import {
-  checkInVisitor,
-  checkOutVisitor,
-} from "@/features/beach/api/beach-client";
+import { checkInVisitor } from "@/features/beach/api/beach-client";
 import {
   ReservationSchema,
   ActiveReservationSchema,
@@ -25,7 +22,9 @@ export function postReservation(
   return api.hotel
     .post(ReservationSchema, "/reservation", body)
     .then(async (reservation) => {
-      await checkInVisitor(reservation.guest_id);
+      await checkInVisitor(reservation.guest_id).catch(() => {
+        // Hotel booking succeeded; beach can resync from active reservation.
+      });
       return reservation;
     });
 }
@@ -42,17 +41,5 @@ export function getReservationByGuest(
 export function cancelReservation(
   id: string
 ): Promise<CancelReservationResponse> {
-  return api.hotel
-    .delete(CancelReservationResponseSchema, `/reservation/${id}`)
-    .then(async (reservation) => {
-      const activeReservation = await api.hotel
-        .get(ActiveReservationSchema, `/reservation/${id}`)
-        .catch(() => null);
-
-      if (activeReservation) {
-        await checkOutVisitor(activeReservation.guest_id);
-      }
-
-      return reservation;
-    });
+  return api.hotel.delete(CancelReservationResponseSchema, `/reservation/${id}`);
 }
