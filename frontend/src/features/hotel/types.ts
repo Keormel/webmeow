@@ -35,6 +35,7 @@ export const RoomsResponseSchema = z.object({
 export const ReservationSchema = z.object({
   id: z.string(),
   guest_id: z.string(),
+  party_guest_ids: z.array(z.string()).optional(),
   room_id: z.string(),
   room_type: RoomTypeSchema,
   guest_count: z.number().int(),
@@ -47,6 +48,7 @@ export const ActiveReservationSchema = ReservationSchema.nullable();
 
 export const PostReservationRequestSchema = z.object({
   guest_id: z.string(),
+  party_guest_ids: z.array(z.string()).min(1).optional(),
   room_type: RoomTypeSchema,
   guest_count: z.number().int().min(1),
   check_in_day: z.number().int().min(0),

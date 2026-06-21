@@ -60,7 +60,7 @@ Rooms are fixed inventory seeded on startup:
 | DELUXE   | 6     | 3        | 200         |
 | SUITE    | 4     | 4        | 400         |
 
-Reservations assign one private room to a guest party for a simulated date range. `GET /rooms` returns each room with its current occupancy count.
+Reservations assign one private room to a guest party for a simulated date range. New booking requests can include `party_guest_ids` to persist the actual guests in the reservation. When provided, that party list is used for room-capacity validation; `guest_count` is still accepted, stored, and returned for testing and compatibility. `GET /rooms` returns each room with its current occupancy count.
 
 ## Endpoints
 
@@ -70,7 +70,7 @@ Reservations assign one private room to a guest party for a simulated date range
 | POST   | `/reservation`                    | Book a room                        |
 | GET    | `/reservation/:id`                | Get reservation by reservation ID  |
 | DELETE | `/reservation/:id`                | Cancel a reservation               |
-| GET    | `/reservation/by-guest/:guest_id` | Get active reservation for a guest |
+| GET    | `/reservation/by-guest/:guest_id` | Get active reservation for a guest in the party |
 | GET    | `/rooms`                          | All rooms with current occupancy   |
 
 `check_in_day` / `check_out_day` are integer **simulation-day** offsets from `SIMULATION_START_TIME` (day `0` = start), not calendar dates.
@@ -84,6 +84,7 @@ curl -X POST http://localhost:3000/reservation \
   -H 'content-type: application/json' \
   -d '{
     "guest_id": "guest-kiki-0001",
+    "party_guest_ids": ["guest-kiki-0001", "guest-milo-0002"],
     "room_type": "SUITE",
     "guest_count": 2,
     "check_in_day": 1,
@@ -97,6 +98,7 @@ Reservation responses include:
 {
   "id": "a1b2c3d4-...",
   "guest_id": "guest-kiki-0001",
+  "party_guest_ids": ["guest-kiki-0001", "guest-milo-0002"],
   "room_id": "room-suite-01",
   "room_type": "SUITE",
   "guest_count": 2,

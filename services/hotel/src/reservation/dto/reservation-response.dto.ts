@@ -6,6 +6,7 @@ import {
 export interface ReservationResponseDto {
   id: string;
   guest_id: string;
+  party_guest_ids: string[];
   room_id: string;
   room_type: RoomType;
   guest_count: number;

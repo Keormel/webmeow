@@ -9,6 +9,7 @@ export interface HotelBroadcastEvent {
   message: string;
   reservation_id: string;
   guest_id: string;
+  party_guest_ids: string[];
   room_type: RoomType;
   guest_count: number;
   check_in_day: number;

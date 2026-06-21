@@ -18,23 +18,30 @@ export class RoomsService {
       this.prisma.room.findMany({
         orderBy: { id: 'asc' },
       }),
-      this.prisma.reservation.groupBy({
-        by: ['room_id'],
+      this.prisma.reservation.findMany({
         where: {
           status: ReservationStatus.CONFIRMED,
           check_in_day: { lte: currentDay },
           check_out_day: { gt: currentDay },
         },
-        _sum: { guest_count: true },
+        select: {
+          room_id: true,
+          guest_count: true,
+          guests: { select: { guest_id: true } },
+        },
       }),
     ]);
 
-    const currentGuestsByRoomId = new Map(
-      occupiedRooms.map((reservationGroup) => [
-        reservationGroup.room_id,
-        reservationGroup._sum.guest_count ?? 0,
-      ]),
-    );
+    const currentGuestsByRoomId = occupiedRooms.reduce((counts, reservation) => {
+      const knownPartySize = reservation.guests.length;
+      const currentGuests =
+        knownPartySize > 1 ? knownPartySize : reservation.guest_count;
+      counts.set(
+        reservation.room_id,
+        (counts.get(reservation.room_id) ?? 0) + currentGuests,
+      );
+      return counts;
+    }, new Map<string, number>());
 
     return {
       rooms: rooms.map((room) => ({
