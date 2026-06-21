@@ -1,5 +1,5 @@
 import { api } from "@/lib/api-client";
-import { checkInVisitor } from "@/features/beach/api/beach-client";
+import { checkInVisitor, checkOutVisitor } from "@/features/beach/api/beach-client";
 import {
   ReservationSchema,
   ActiveReservationSchema,
