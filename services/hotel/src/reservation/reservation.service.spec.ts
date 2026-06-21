@@ -143,4 +143,10 @@ describe('ReservationService', () => {
       }),
     );
   });
+
+  it('returns null when a guest has no active reservation', async () => {
+    prisma.reservation.findFirst.mockResolvedValue(null);
+
+    await expect(service.findActiveByGuestId('guest-a')).resolves.toBeNull();
+  });
 });

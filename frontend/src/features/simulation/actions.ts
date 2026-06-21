@@ -72,6 +72,10 @@ export async function arrive(guest: GuestProfile): Promise<string | null> {
 }
 
 export async function askParrot(guest: GuestProfile): Promise<void> {
+  if (!env.parrotTrafficEnabled) {
+    return;
+  }
+
   const now = Date.now();
   if (now - lastParrotChatAt < env.parrotChatCooldownMs) {
     return;
@@ -90,6 +94,11 @@ export async function bookHotel(guest: GuestProfile): Promise<string | null> {
     const arrival = await getArrivalStatus(guest.id);
     if (arrival.status !== "processed") {
       return null;
+    }
+
+    const existing = await getReservationByGuest(guest.id);
+    if (existing) {
+      return existing.id;
     }
 
     const result = await postReservation(randomReservationBody(guest));

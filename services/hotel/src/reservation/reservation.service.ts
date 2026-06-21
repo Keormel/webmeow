@@ -246,7 +246,9 @@ export class ReservationService {
     return this.toReservationResponse(reservation);
   }
 
-  async findActiveByGuestId(guestId: string): Promise<ReservationResponseDto> {
+  async findActiveByGuestId(
+    guestId: string,
+  ): Promise<ReservationResponseDto | null> {
     const reservation = await this.prisma.reservation.findFirst({
       where: {
         status: ReservationStatus.CONFIRMED,
@@ -262,12 +264,7 @@ export class ReservationService {
       },
     });
 
-    if (!reservation) {
-      throw new HttpException(
-        { error: 'Reservation not found' },
-        HttpStatus.NOT_FOUND,
-      );
-    }
+    if (!reservation) return null;
 
     return this.toReservationResponse(reservation);
   }
