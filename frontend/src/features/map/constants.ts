@@ -19,3 +19,8 @@ export enum ZoneId {
   Parrot = "parrot",
   Broadcast = "broadcast",
 }
+
+export enum IslandId {
+  Purrlington = "purrlington",
+  Alien = "alien",
+}

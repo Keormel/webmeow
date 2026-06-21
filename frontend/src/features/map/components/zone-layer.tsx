@@ -1,13 +1,15 @@
 import {
+  IslandId,
   MAP_H,
   MAP_W,
   ZONE_HIT_RADIUS,
   ZoneId,
 } from "@/features/map/constants";
 import { ZoneIndicator } from "@/features/map/components/zone-indicator";
-import { getZone } from "@/features/map/zone-registry";
+import { getIslandZone } from "@/features/map/zone-registry";
 
 interface ZoneLayerProps {
+  islandId: IslandId;
   mapW: number;
   mapH: number;
   questTargetId?: ZoneId | null;
@@ -15,6 +17,7 @@ interface ZoneLayerProps {
 }
 
 export function ZoneLayer({
+  islandId,
   mapW,
   mapH,
   questTargetId,
@@ -27,7 +30,7 @@ export function ZoneLayer({
   return (
     <div className="pointer-events-none absolute inset-0">
       {Object.values(ZoneId).map((id) => {
-        const zone = getZone(id);
+        const zone = getIslandZone(id, islandId);
         return (
           <ZoneIndicator
             key={id}
