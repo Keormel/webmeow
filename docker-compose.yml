@@ -31,7 +31,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
+    environment:
+      PGHOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes: 
       - ./docker/seed-beach.sh:/seed-beach.sh
     entrypoint: ["/bin/sh", "/seed-beach.sh"]
   # ──────────── Gateway (Go) ────────────
@@ -119,8 +123,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-
-
   # ──────────── Broadcast (Express / SSE) ────────────
   broadcast:
     build: ./services/broadcast
@@ -172,7 +174,3 @@ services:
 
 volumes:
   pgdata:
-
-
-networks:
-  default:
