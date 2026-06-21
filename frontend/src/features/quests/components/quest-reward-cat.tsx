@@ -57,7 +57,7 @@ function RewardLayer({
       draggable={false}
       className={cn(
         "pointer-events-none absolute select-none",
-        preview && "opacity-35 grayscale"
+        preview && "opacity-35"
       )}
       style={rewardLayerStyle(reward, preview ? 2 : 3)}
     />
@@ -81,7 +81,7 @@ export function QuestRewardCat({ steps, activeStep }: QuestRewardCatProps) {
             alt=""
             aria-hidden="true"
             draggable={false}
-            className="quest-reward-cat-base pointer-events-none absolute top-0 right-0 h-full w-[85.5%] select-none"
+            className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
           />
         )}
 
