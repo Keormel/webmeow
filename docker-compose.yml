@@ -24,6 +24,8 @@ services:
       interval: 3s
       timeout: 3s
       retries: 15
+    networks:
+      - island-network
 
   db-seed:
     image: postgres:16-alpine
@@ -65,6 +67,8 @@ services:
         condition: service_started
       parrot:
         condition: service_started
+    networks:
+      - island-network
 
   # ──────────── Airport (Python / Flask / SQLite) ────────────
   airport:
@@ -81,7 +85,8 @@ services:
       PROCESSING_TIME_EU: ${PROCESSING_TIME_EU}
       PROCESSING_TIME_ALL: ${PROCESSING_TIME_ALL}
       AIRPORT_TOKEN: ${AIRPORT_TOKEN}
-
+  networks:
+      - island-network
   # ──────────── Hotel (NestJS / Prisma / PostgreSQL) ────────────
   hotel:
     build: ./services/hotel
@@ -98,6 +103,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - island-network
 
   # ──────────── Beach (Kotlin / Ktor / PostgreSQL) ────────────
   beach:
@@ -117,6 +124,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - island-network
 
   # ──────────── Broadcast (Express / SSE) ────────────
   broadcast:
@@ -131,6 +140,8 @@ services:
       AIRPORT_TOKEN: ${AIRPORT_TOKEN}
       PARROT_TOKEN: ${PARROT_TOKEN}
       ADMIN_PASSCODE: ${VITE_ADMIN_PASSCODE}
+    networks:
+      - island-network
 
   # ──────────── Parrot (FastAPI / LLM) ────────────
   parrot:
@@ -147,6 +158,8 @@ services:
       LLM_TOP_P: ${LLM_TOP_P}
       AIRPORT_SERVICE_URL: ${AIRPORT_SERVICE_URL}
       HOTEL_SERVICE_URL: ${HOTEL_SERVICE_URL}
+    networks:
+      - island-network
 
   # ──────────── Frontend (React / Vite dev server) ────────────
   frontend:
@@ -164,6 +177,8 @@ services:
     depends_on:
       gateway:
         condition: service_started
+    networks:
+      - island-network
 
 volumes:
   pgdata:
