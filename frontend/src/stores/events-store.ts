@@ -4,6 +4,7 @@ import { ChannelId } from "@/types/broadcast";
 import type { BroadcastEvent } from "@/types/broadcast";
 
 const MAX_EVENTS = 100;
+const RESORT_ANNOUNCEMENT_TYPE = "resort.announcement";
 
 interface IngestEventOptions {
   mirrorToResortWide?: boolean;
@@ -54,6 +55,29 @@ export const useEventsStore = create<EventsState>()((set) => ({
 
   ingestEvent: (event, options) =>
     set((state) => {
+      if (event.event_type === RESORT_ANNOUNCEMENT_TYPE) {
+        const nextEvents = { ...state.events };
+        const nextActivityTick = { ...state.activityTick };
+
+        Object.values(ChannelId).forEach((channel) => {
+          const channelEvent: BroadcastEvent = {
+            ...event,
+            id: channel === event.channel ? event.id : crypto.randomUUID(),
+            channel,
+          };
+          nextEvents[channel] = prependEvent(
+            state.events[channel],
+            channelEvent
+          );
+          nextActivityTick[channel] = state.activityTick[channel] + 1;
+        });
+
+        return {
+          events: nextEvents,
+          activityTick: nextActivityTick,
+        };
+      }
+
       const nextEvents = {
         ...state.events,
         [event.channel]: prependEvent(state.events[event.channel], event),
