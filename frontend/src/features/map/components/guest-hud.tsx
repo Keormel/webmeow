@@ -60,6 +60,10 @@ export function GuestHud() {
     navigate("/quit");
   }
 
+  function handleOpenPass() {
+    navigate("/pass");
+  }
+
   if (!session) return null;
 
   if (session.role === "admin") {
@@ -73,12 +77,14 @@ export function GuestHud() {
           <IconShieldLock size={20} />
         </div>
         <div>
-          <p
+          <button
+            type="button"
+            onClick={handleOpenPass}
             data-testid="current-guest-name"
-            className="font-display text-sm font-medium text-sidebar-foreground"
+            className="cursor-pointer text-left font-display text-sm font-medium text-sidebar-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-primary"
           >
             {session.displayName}
-          </p>
+          </button>
           <p className="text-xs text-sidebar-foreground/60">
             Admin observer mode
           </p>
@@ -103,12 +109,14 @@ export function GuestHud() {
       </Avatar>
 
       <div>
-        <p
+        <button
+          type="button"
+          onClick={handleOpenPass}
           data-testid="current-guest-name"
-          className="font-display text-sm font-medium text-sidebar-foreground"
+          className="cursor-pointer text-left font-display text-sm font-medium text-sidebar-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-primary"
         >
           {guest.name} {guest.surname}
-        </p>
+        </button>
         <p className="text-xs text-sidebar-foreground/60 capitalize">
           {guest.priority} guest
         </p>
