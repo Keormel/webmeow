@@ -2,13 +2,80 @@ import { useEffect, useRef, useState } from "react";
 
 import { env } from "@/config/env";
 import { useEventsStore } from "@/stores/events-store";
+import { ChannelId } from "@/types/broadcast";
 import { BroadcastEventSchema } from "@/types/broadcast";
-import type { ConnectionStatus } from "@/types/broadcast";
+import type { BroadcastEvent, ConnectionStatus } from "@/types/broadcast";
 
 const BACKOFF_INITIAL_MS = 1_000;
 const BACKOFF_MAX_MS = 30_000;
 
 const BROADCAST_PATH = "/api/broadcast/events";
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function channelFromSource(source: unknown): ChannelId {
+  switch (source) {
+    case "airport":
+      return ChannelId.Airport;
+    case "hotel":
+      return ChannelId.Hotel;
+    case "beach":
+      return ChannelId.Beach;
+    case "parrot":
+      return ChannelId.Parrot;
+    case "broadcast":
+      return ChannelId.Broadcast;
+    default:
+      return ChannelId.ResortWide;
+  }
+}
+
+function normalizeIslandEvent(raw: unknown): BroadcastEvent | null {
+  const parsed = BroadcastEventSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  const event = asRecord(raw);
+  if (typeof event.id !== "string" || typeof event.type !== "string") {
+    return null;
+  }
+
+  const payload = asRecord(event.payload);
+  const body = asRecord(payload.body);
+  const nestedPayload = asRecord(body.payload);
+  const directPayload = Object.keys(nestedPayload).length > 0
+    ? nestedPayload
+    : asRecord(body.data);
+  const message =
+    typeof nestedPayload.message === "string"
+      ? nestedPayload.message
+      : typeof body.message === "string"
+        ? body.message
+        : typeof payload.message === "string"
+          ? payload.message
+          : event.type;
+
+  return {
+    id: event.id,
+    channel: channelFromSource(event.source),
+    event_type: event.type,
+    message,
+    sender: typeof event.source === "string" ? event.source : "broadcast",
+    guest_id:
+      typeof nestedPayload.guest_id === "string"
+        ? nestedPayload.guest_id
+        : typeof directPayload.guest_id === "string"
+          ? directPayload.guest_id
+          : undefined,
+    data: {
+      timestamp: event.timestamp,
+      payload,
+    },
+  };
+}
 
 export function useBroadcast() {
   const [status, setStatus] = useState<ConnectionStatus>(() => {
@@ -44,13 +111,11 @@ export function useBroadcast() {
 
       es.onmessage = (e: MessageEvent) => {
         try {
-          const parsed = BroadcastEventSchema.safeParse(
-            JSON.parse(e.data as string)
-          );
-          if (parsed.success) {
+          const event = normalizeIslandEvent(JSON.parse(e.data as string));
+          if (event) {
             useEventsStore
               .getState()
-              .ingestEvent(parsed.data, { mirrorToResortWide: true });
+              .ingestEvent(event, { mirrorToResortWide: true });
           }
         } catch {
           // malformed payload

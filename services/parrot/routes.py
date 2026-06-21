@@ -34,7 +34,8 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         reply, new_messages = await chat(req.message, req.guest_id, request.app.state.context, history)
     except Exception as e:
         logger.exception("Chat failed")
-        raise HTTPException(status_code=502, detail="LLM service unavailable") from e
+        reply = "I can't reach the information center right now. Please try again in a moment."
+        new_messages = [{"role": "user", "content": req.message}, {"role": "assistant", "content": reply}]
 
     if req.guest_id:
         store.append(req.guest_id, new_messages)

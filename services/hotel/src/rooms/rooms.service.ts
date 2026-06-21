@@ -44,13 +44,18 @@ export class RoomsService {
     }, new Map<string, number>());
 
     return {
-      rooms: rooms.map((room) => ({
-        id: room.id,
-        type: room.type,
-        capacity: room.capacity,
-        price_per_night: room.price_per_night,
-        current_guests: currentGuestsByRoomId.get(room.id) ?? 0,
-      })),
+      rooms: rooms.map((room) => {
+        const occupancy = currentGuestsByRoomId.get(room.id) ?? 0;
+
+        return {
+          id: room.id,
+          type: room.type,
+          capacity: room.capacity,
+          price_per_night: room.price_per_night,
+          occupancy,
+          current_guests: occupancy,
+        };
+      }),
     };
   }
 }
