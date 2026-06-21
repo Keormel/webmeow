@@ -188,5 +188,5 @@ volumes:
 
 networks:
   island-network:
-    driver: bridge
+    name: island-network
     external: true
