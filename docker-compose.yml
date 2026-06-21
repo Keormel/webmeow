@@ -35,6 +35,8 @@ services:
     volumes:
       - ./docker/seed-beach.sh:/seed-beach.sh
     entrypoint: ["/bin/sh", "/seed-beach.sh"]
+    networks:
+      - island-network
   # ──────────── Gateway (Go) ────────────
   gateway:
     healthcheck:
@@ -85,7 +87,7 @@ services:
       PROCESSING_TIME_EU: ${PROCESSING_TIME_EU}
       PROCESSING_TIME_ALL: ${PROCESSING_TIME_ALL}
       AIRPORT_TOKEN: ${AIRPORT_TOKEN}
-  networks:
+    networks:
       - island-network
   # ──────────── Hotel (NestJS / Prisma / PostgreSQL) ────────────
   hotel:
