@@ -20,6 +20,7 @@ export interface QuestRewardDefinition {
   label: string;
   assetFileName: string;
   fallbackAssetFileName?: string;
+  placement: "head" | "neck" | "body" | "left-hand" | "right-hand";
   layer: {
     left: string;
     top: string;
@@ -60,10 +61,11 @@ export const QUEST_STEPS: QuestStepDefinition[] = [
       label: "Hotel badge",
       assetFileName: "2 hotel.svg",
       fallbackAssetFileName: "hotel.svg",
+      placement: "left-hand",
       layer: {
-        left: "38%",
-        top: "31%",
-        width: "25%",
+        left: "5%",
+        top: "55%",
+        width: "30%",
       },
     },
   },
@@ -78,10 +80,11 @@ export const QUEST_STEPS: QuestStepDefinition[] = [
     reward: {
       label: "Beach garland",
       assetFileName: "2 beach.svg",
+      placement: "neck",
       layer: {
-        left: "18%",
-        top: "33%",
-        width: "65%",
+        left: "13%",
+        top: "37%",
+        width: "74%",
       },
     },
   },
@@ -96,10 +99,11 @@ export const QUEST_STEPS: QuestStepDefinition[] = [
     reward: {
       label: "Parrot plume",
       assetFileName: "2 parrot.svg",
+      placement: "head",
       layer: {
-        left: "0%",
-        top: "0%",
-        width: "93.5%",
+        left: "5%",
+        top: "-2%",
+        width: "90%",
       },
     },
   },
@@ -114,10 +118,11 @@ export const QUEST_STEPS: QuestStepDefinition[] = [
     reward: {
       label: "Lighthouse charm",
       assetFileName: "2 lighthouse.svg",
+      placement: "right-hand",
       layer: {
-        left: "40%",
-        top: "16%",
-        width: "38%",
+        left: "57%",
+        top: "53%",
+        width: "35%",
       },
     },
   },

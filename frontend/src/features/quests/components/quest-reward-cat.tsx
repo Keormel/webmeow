@@ -13,6 +13,8 @@ const RIGHT_HAND_ASSET = getRewardAsset("3 righthand.svg");
 interface QuestRewardCatProps {
   steps: QuestStep[];
   activeStep: QuestStep | null;
+  className?: string;
+  frameClassName?: string;
 }
 
 interface QuestRewardThumbProps {
@@ -34,6 +36,14 @@ function rewardLayerStyle(
     width: reward.layer.width,
     zIndex,
   };
+}
+
+function rewardUsesLeftHand(reward: QuestRewardDefinition): boolean {
+  return reward.placement === "left-hand";
+}
+
+function rewardUsesRightHand(reward: QuestRewardDefinition): boolean {
+  return reward.placement === "right-hand";
 }
 
 function RewardLayer({
@@ -64,24 +74,41 @@ function RewardLayer({
   );
 }
 
-export function QuestRewardCat({ steps, activeStep }: QuestRewardCatProps) {
+export function QuestRewardCat({
+  steps,
+  activeStep,
+  className,
+  frameClassName,
+}: QuestRewardCatProps) {
   const earnedRewards = steps
     .filter((step) => step.completed && step.reward)
     .map((step) => step.reward!);
   const previewReward =
     activeStep && !activeStep.completed ? activeStep.reward : undefined;
-  const showHands = earnedRewards.length > 0 || previewReward !== undefined;
+  const visibleRewards = previewReward
+    ? [...earnedRewards, previewReward]
+    : earnedRewards;
+  const showLeftHand = visibleRewards.some(rewardUsesLeftHand);
+  const showRightHand = visibleRewards.some(rewardUsesRightHand);
 
   return (
-    <div className="flex justify-center" data-testid="quest-reward-cat">
-      <div className="quest-reward-cat-frame relative h-40 w-[134px] overflow-visible">
+    <div
+      className={cn("flex justify-center", className)}
+      data-testid="quest-reward-cat"
+    >
+      <div
+        className={cn(
+          "relative h-40 w-[134px] overflow-visible",
+          frameClassName
+        )}
+      >
         {CAT_ASSET && (
           <img
             src={CAT_ASSET}
             alt=""
             aria-hidden="true"
             draggable={false}
-            className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
+            className="pointer-events-none absolute inset-0 h-full w-full object-contain select-none"
           />
         )}
 
@@ -91,7 +118,7 @@ export function QuestRewardCat({ steps, activeStep }: QuestRewardCatProps) {
 
         {previewReward && <RewardLayer reward={previewReward} preview />}
 
-        {showHands && RIGHT_HAND_ASSET && (
+        {showRightHand && RIGHT_HAND_ASSET && (
           <img
             src={RIGHT_HAND_ASSET}
             alt=""
@@ -99,15 +126,15 @@ export function QuestRewardCat({ steps, activeStep }: QuestRewardCatProps) {
             draggable={false}
             className="pointer-events-none absolute select-none"
             style={{
-              left: "68%",
-              top: "66%",
-              width: "12.3%",
+              left: "69%",
+              top: "64%",
+              width: "13%",
               zIndex: 4,
             }}
           />
         )}
 
-        {showHands && LEFT_HAND_ASSET && (
+        {showLeftHand && LEFT_HAND_ASSET && (
           <img
             src={LEFT_HAND_ASSET}
             alt=""
@@ -116,8 +143,8 @@ export function QuestRewardCat({ steps, activeStep }: QuestRewardCatProps) {
             className="pointer-events-none absolute select-none"
             style={{
               left: "13%",
-              top: "66%",
-              width: "11%",
+              top: "64%",
+              width: "11.5%",
               zIndex: 4,
             }}
           />
