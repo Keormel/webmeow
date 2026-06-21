@@ -24,6 +24,10 @@ export const CancelActivityResponseSchema = z.object({
   status: z.string(),
 });
 
+export const VisitorStatusResponseSchema = z.object({
+  status: z.enum(["checked_in", "checked_out"]),
+});
+
 export const ActivityByGuestResponseSchema = z.object({
   activity_id: z.string().nullable(),
 });
@@ -35,6 +39,7 @@ export type BookActivityResponse = z.infer<typeof BookActivityResponseSchema>;
 export type CancelActivityResponse = z.infer<
   typeof CancelActivityResponseSchema
 >;
+export type VisitorStatusResponse = z.infer<typeof VisitorStatusResponseSchema>;
 export type ActivityByGuestResponse = z.infer<
   typeof ActivityByGuestResponseSchema
 >;

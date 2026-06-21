@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export const ArrivalStatusValue = z.enum(["queued", "processing", "processed"]);
+export const ArrivalStatusValue = z.enum([
+  "not_started",
+  "queued",
+  "processing",
+  "processed",
+]);
 export type ArrivalStatusValue = z.infer<typeof ArrivalStatusValue>;
 
 export const PostArrivalRequestSchema = z.object({
@@ -49,11 +54,17 @@ export const GateStatusSchema = z.object({
   gate_id: z.string(),
   gate_type: z.enum(["EU", "ALL"]),
   queue_size: z.number().int(),
+  queue_length: z.number().int().optional(),
+  waiting_count: z.number().int().optional(),
+  processed_count: z.number().int().optional(),
   queue: z.array(QueuedGuestSchema),
 });
 
 export const QueueResponseSchema = z.object({
   gates: z.array(GateStatusSchema),
+  queue_length: z.number().int().optional(),
+  waiting_count: z.number().int().optional(),
+  processed_count: z.number().int().optional(),
   total_queued: z.number().int(),
   current_game_time: z.number(),
 });

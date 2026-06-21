@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Prisma, ReservationStatus } from '../../generated/prisma/client.js';
+import { ReservationStatus } from '../../generated/prisma/client.js';
 import { AirportService } from '../airport/airport.service';
 import { BroadcastService } from '../broadcast/broadcast.service';
 import { HotelBroadcastEventType } from '../broadcast/hotel-events';
@@ -56,8 +56,8 @@ export class ReservationService {
         where: {
           room_id: room.id,
           status: ReservationStatus.CONFIRMED,
-          check_in_day: { lte: createReservationDto.check_out_day },
-          check_out_day: { gte: createReservationDto.check_in_day },
+          check_in_day: { lt: createReservationDto.check_out_day },
+          check_out_day: { gt: createReservationDto.check_in_day },
         },
       });
 
@@ -126,7 +126,6 @@ export class ReservationService {
     }
   }
 
-  // see findActiveByGuestId for the optimized query path
   async findById(id: string): Promise<ReservationResponseDto> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id },
@@ -153,56 +152,57 @@ export class ReservationService {
   }
 
   async findActiveByGuestId(guestId: string): Promise<ReservationResponseDto> {
-    const rows = await this.prisma.$queryRaw<any[]>(
-      Prisma.sql`
-        SELECT r.id, r.guest_id, r.room_id, r.guest_count, r.check_in_day, r.check_out_day, r.status,
-               rm.type AS room_type
-        FROM "Reservation" r
-        JOIN "Room" rm ON rm.id = r.room_id
-        WHERE r.guest_id = ${guestId}
-        ORDER BY r.check_in_day DESC
-        LIMIT 1
-      `,
-    );
+    const reservation = await this.prisma.reservation.findFirst({
+      where: {
+        guest_id: guestId,
+        status: ReservationStatus.CONFIRMED,
+      },
+      orderBy: { check_in_day: 'desc' },
+      include: { room: true },
+    });
 
-    if (!rows.length) {
+    if (!reservation) {
       throw new HttpException(
         { error: 'Reservation not found' },
         HttpStatus.NOT_FOUND,
       );
     }
 
-    const row = rows[0];
     return {
-      id: row.id,
-      guest_id: row.guest_id,
-      room_id: row.room_id,
-      room_type: row.room_type,
-      guest_count: row.guest_count,
-      check_in_day: row.check_in_day,
-      check_out_day: row.check_out_day,
-      status: row.status,
+      id: reservation.id,
+      guest_id: reservation.guest_id,
+      room_id: reservation.room_id,
+      room_type: reservation.room.type,
+      guest_count: reservation.guest_count,
+      check_in_day: reservation.check_in_day,
+      check_out_day: reservation.check_out_day,
+      status: reservation.status,
     };
   }
 
   async cancel(id: string): Promise<CancelReservationResponseDto> {
-    await this.prisma.$executeRaw(
-      Prisma.sql`UPDATE "Reservation" SET status = 'CANCELLED' WHERE id = ${id}`,
-    );
-
-    const existingReservation = await this.prisma.reservation.findFirst({
-      where: { id, status: ReservationStatus.CANCELLED },
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id },
+      include: { room: true },
     });
 
-    if (!existingReservation) {
+    if (!reservation) {
       throw new HttpException(
         { error: 'Reservation not found' },
         HttpStatus.NOT_FOUND,
       );
     }
 
-    const reservation = await this.prisma.reservation.findUniqueOrThrow({
-      where: { id: existingReservation.id },
+    if (reservation.status === ReservationStatus.CANCELLED) {
+      throw new HttpException(
+        { error: 'Reservation already cancelled' },
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const cancelled = await this.prisma.reservation.update({
+      where: { id },
+      data: { status: ReservationStatus.CANCELLED },
       include: { room: true },
     });
 
@@ -210,18 +210,18 @@ export class ReservationService {
       HotelBroadcastEventType.ReservationCancelled,
       {
         message: 'Hotel reservation cancelled.',
-        reservation_id: reservation.id,
-        guest_id: reservation.guest_id,
-        room_type: reservation.room.type,
-        guest_count: reservation.guest_count,
-        check_in_day: reservation.check_in_day,
-        check_out_day: reservation.check_out_day,
+        reservation_id: cancelled.id,
+        guest_id: cancelled.guest_id,
+        room_type: cancelled.room.type,
+        guest_count: cancelled.guest_count,
+        check_in_day: cancelled.check_in_day,
+        check_out_day: cancelled.check_out_day,
       },
     );
 
     return {
-      id: reservation.id,
-      status: reservation.status,
+      id: cancelled.id,
+      status: cancelled.status,
     };
   }
 }

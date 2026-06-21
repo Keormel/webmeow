@@ -5,11 +5,13 @@ import {
   ActivityByGuestResponseSchema,
   BookActivityResponseSchema,
   CancelActivityResponseSchema,
+  VisitorStatusResponseSchema,
   type ActivitiesResponse,
   type Activity,
   type ActivityByGuestResponse,
   type BookActivityResponse,
   type CancelActivityResponse,
+  type VisitorStatusResponse,
 } from "@/features/beach/types";
 
 export function getActivities(): Promise<ActivitiesResponse> {
@@ -51,4 +53,18 @@ export function getActivityByGuest(
     ActivityByGuestResponseSchema,
     `/activity/by-guest/${guestId}`
   );
+}
+
+export function checkInVisitor(guestId: string): Promise<VisitorStatusResponse> {
+  return api.beach.post(VisitorStatusResponseSchema, "/visitor/check-in", {
+    id: guestId,
+  });
+}
+
+export function checkOutVisitor(
+  guestId: string
+): Promise<VisitorStatusResponse> {
+  return api.beach.post(VisitorStatusResponseSchema, "/visitor/check-out", {
+    id: guestId,
+  });
 }

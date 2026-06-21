@@ -17,7 +17,12 @@ fun Application.configureRouting() {
 
     val cancelUseCase = CancelActivityUseCase(activityRepository)
 
-    val controller = ActivityController(activityRepository, bookUseCase, cancelUseCase)
+    val controller = ActivityController(
+        activityRepository,
+        visitorRepository,
+        bookUseCase,
+        cancelUseCase
+    )
 
     routing {
         activityRoutes(controller)

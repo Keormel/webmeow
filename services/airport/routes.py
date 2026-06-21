@@ -30,7 +30,15 @@ def register_routes(app):
     def get_arrival(guest_id):
         guest = app.gate_manager.get_guest(guest_id)
         if not guest:
-            return jsonify({"error": "Guest not found"}), 404
+            return jsonify({
+                "guest_id": guest_id,
+                "status": "not_started",
+                "gate": "",
+                "position": None,
+                "queued_at": 0,
+                "processed_at": None,
+                "wait_time_seconds": None,
+            }), 200
 
         position = None
         if guest["status"] in ("queued", "processing"):

@@ -44,4 +44,14 @@ fun Route.activityRoutes(
     get("/activities") {
         controller.getActivities(call)
     }
+
+    route("/visitor") {
+        post("/check-in") {
+            controller.checkInVisitor(call)
+        }
+
+        post("/check-out") {
+            controller.checkOutVisitor(call)
+        }
+    }
 }

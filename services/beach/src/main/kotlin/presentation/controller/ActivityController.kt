@@ -4,6 +4,7 @@ package com.hackathon.summer.faf.presentation.controller
 import com.hackathon.summer.faf.application.usecase.BookActivityUseCase
 import com.hackathon.summer.faf.application.usecase.CancelActivityUseCase
 import com.hackathon.summer.faf.domain.repository.ActivityRepository
+import com.hackathon.summer.faf.domain.repository.VisitorRepository
 import com.hackathon.summer.faf.presentation.request.VisitorRequest
 import com.hackathon.summer.faf.presentation.response.ActivityResponse
 import com.hackathon.summer.faf.presentation.response.ErrorResponse
@@ -18,6 +19,7 @@ import io.ktor.server.routing.*
 
 class ActivityController(
     private val activityRepository: ActivityRepository,
+    private val visitorRepository: VisitorRepository,
     private val bookActivityUseCase: BookActivityUseCase,
     private val cancelActivityUseCase: CancelActivityUseCase
 ) {
@@ -158,5 +160,29 @@ class ActivityController(
             HttpStatusCode.OK,
             mapOf("activities" to response)
         )
+    }
+
+    suspend fun checkInVisitor(call: ApplicationCall) {
+        val request = call.receive<VisitorRequest>()
+
+        if (request.id.isBlank()) {
+            respondError(call, VisitorErrors.VISITOR_MISSING_ID)
+            return
+        }
+
+        visitorRepository.checkIn(request.id)
+        call.respond(HttpStatusCode.OK, mapOf("status" to "checked_in"))
+    }
+
+    suspend fun checkOutVisitor(call: ApplicationCall) {
+        val request = call.receive<VisitorRequest>()
+
+        if (request.id.isBlank()) {
+            respondError(call, VisitorErrors.VISITOR_MISSING_ID)
+            return
+        }
+
+        visitorRepository.checkOut(request.id)
+        call.respond(HttpStatusCode.OK, mapOf("status" to "checked_out"))
     }
 }
