@@ -18,9 +18,7 @@ class CancelActivityUseCase(
             return VisitorErrors.VISITOR_MISSING_ID
         }
 
-        if (!activity.bookedVisitors.contains(visitorId)) {
-            return ActivityErrors.ACTIVITY_NOT_BOOKED
-        }
+        if (!activity.bookedVisitors.contains(visitorId)) return null
 
         activityRepository.cancel(activityId, visitorId)
 

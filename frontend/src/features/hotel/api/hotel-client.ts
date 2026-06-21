@@ -51,23 +51,17 @@ export function getReservationByGuest(
 export function cancelReservation(
   id: string
 ): Promise<CancelReservationResponse> {
-  return api.hotel
-    .delete(CancelReservationResponseSchema, `/reservation/${id}`)
-    .then(async (reservation) => {
-      const activeReservation = await api.hotel
-        .get(ActiveReservationSchema, `/reservation/${id}`)
-        .catch(() => null);
+  return api.hotel.delete(CancelReservationResponseSchema, `/reservation/${id}`);
+}
 
-      if (activeReservation) {
-        await Promise.all(
-          reservationGuestIds(activeReservation).map((guestId) =>
-            checkOutVisitor(guestId).catch(() => {
-              // Hotel cancellation succeeded; beach can resync from active reservation.
-            })
-          )
-        );
-      }
-
-      return reservation;
-    });
+export async function syncReservationCheckOut(
+  reservation: Reservation
+): Promise<void> {
+  await Promise.all(
+    reservationGuestIds(reservation).map((guestId) =>
+      checkOutVisitor(guestId).catch(() => {
+        // Hotel cancellation succeeded; beach can resync from active reservation.
+      })
+    )
+  );
 }

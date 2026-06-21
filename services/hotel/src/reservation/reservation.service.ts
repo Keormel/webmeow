@@ -283,10 +283,10 @@ export class ReservationService {
     }
 
     if (reservation.status === ReservationStatus.CANCELLED) {
-      throw new HttpException(
-        { error: 'Reservation already cancelled' },
-        HttpStatus.CONFLICT,
-      );
+      return {
+        id: reservation.id,
+        status: reservation.status,
+      };
     }
 
     const cancelled = await this.prisma.reservation.update({

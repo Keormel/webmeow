@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   getReservationByGuest,
   cancelReservation,
+  syncReservationCheckOut,
 } from "@/features/hotel/api/hotel-client";
 import {
   checkInVisitor,
@@ -55,9 +56,17 @@ export function useActiveReservation() {
     mutationFn: (id: string) => cancelReservation(id),
     onSuccess: () => {
       if (guest) {
-        checkOutVisitor(guest.id).catch(() => {
-          // Hotel cancellation is already complete; beach sync is best-effort.
-        });
+        const reservation = query.data;
+
+        if (reservation) {
+          syncReservationCheckOut(reservation);
+        } else {
+          checkOutVisitor(guest.id).catch(() => {
+            // Hotel cancellation is already complete; beach sync is best-effort.
+          });
+        }
+
+        queryClient.setQueryData([...HOTEL_KEYS.RESERVATION, guest.id], null);
 
         if (trackedActivityBooking) {
           const refunded = refundActivityTokens(
