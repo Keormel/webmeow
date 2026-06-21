@@ -188,5 +188,5 @@ volumes:
 
 networks:
   island-network:
-    name: island-network
+    name: gyihup38ya4u8pupwy6tlpnf_island-network
     external: true
