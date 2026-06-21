@@ -125,6 +125,7 @@ services:
       BEACH_TOKEN: ${BEACH_TOKEN}
       AIRPORT_TOKEN: ${AIRPORT_TOKEN}
       PARROT_TOKEN: ${PARROT_TOKEN}
+      ADMIN_PASSCODE: ${ADMIN_PASSCODE}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
 
   # ──────────── Parrot (FastAPI / LLM) ────────────

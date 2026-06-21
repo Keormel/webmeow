@@ -1,6 +1,8 @@
 import { IconArrowLeft, IconRocket } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
+import { AdminAnnouncementForm } from "@/features/broadcast/components/admin-announcement-form";
+import { isResortAnnouncementVisibleToGuest } from "@/features/broadcast/lib/map-island-event";
 import { EventLog } from "@/features/map/components/event-log";
 import { IslandId, ZoneId } from "@/features/map/constants";
 import { getZone } from "@/features/map/zone-registry";
@@ -8,7 +10,6 @@ import { useEventsStore } from "@/stores/events-store";
 import { useIsAdmin } from "@/stores/session-selectors";
 
 const { channel } = getZone(ZoneId.Broadcast);
-const PUBLIC_EVENT_PREFIX = "public.";
 
 interface BroadcastPanelProps {
   currentIslandId: IslandId;
@@ -27,12 +28,11 @@ export function BroadcastPanel({
 
   const visible = isAdmin
     ? events
-    : events.filter((event) =>
-        event.event_type.startsWith(PUBLIC_EVENT_PREFIX)
-      );
+    : events.filter((event) => isResortAnnouncementVisibleToGuest(event.event_type));
 
   return (
     <>
+      {isAdmin && <AdminAnnouncementForm />}
       <div className="flex justify-end">
         <Button
           type="button"

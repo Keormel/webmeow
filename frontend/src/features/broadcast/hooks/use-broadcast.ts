@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
 import { env } from "@/config/env";
+import {
+  BROADCAST_SSE_EVENT_TYPES,
+  IslandEventSchema,
+  mapIslandEventToBroadcastEvent,
+} from "@/features/broadcast/lib/map-island-event";
 import { useEventsStore } from "@/stores/events-store";
-import { BroadcastEventSchema } from "@/types/broadcast";
-import type { ConnectionStatus } from "@/types/broadcast";
+import { ChannelId, type ConnectionStatus } from "@/types/broadcast";
 
 const BACKOFF_INITIAL_MS = 1_000;
 const BACKOFF_MAX_MS = 30_000;
@@ -30,6 +34,31 @@ export function useBroadcast() {
 
     activeRef.current = true;
 
+    function ingestRawPayload(raw: string) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        return;
+      }
+
+      const island = IslandEventSchema.safeParse(parsed);
+      if (!island.success) {
+        return;
+      }
+
+      const event = mapIslandEventToBroadcastEvent(island.data);
+      const fanOut = island.data.type === "resort-wide.announcement";
+
+      useEventsStore.getState().ingestEvent(event, {
+        mirrorToResortWide:
+          !fanOut &&
+          event.channel !== ChannelId.ResortWide &&
+          event.channel !== ChannelId.Broadcast,
+        fanOutToAllZones: fanOut,
+      });
+    }
+
     function connect() {
       if (!activeRef.current) return;
 
@@ -42,19 +71,18 @@ export function useBroadcast() {
         setStatus("connected");
       };
 
+      es.addEventListener("connected", () => {
+        setStatus("connected");
+      });
+
+      for (const eventType of BROADCAST_SSE_EVENT_TYPES) {
+        es.addEventListener(eventType, (e: Event) => {
+          ingestRawPayload((e as MessageEvent<string>).data);
+        });
+      }
+
       es.onmessage = (e: MessageEvent) => {
-        try {
-          const parsed = BroadcastEventSchema.safeParse(
-            JSON.parse(e.data as string)
-          );
-          if (parsed.success) {
-            useEventsStore
-              .getState()
-              .ingestEvent(parsed.data, { mirrorToResortWide: true });
-          }
-        } catch {
-          // malformed payload
-        }
+        ingestRawPayload(e.data as string);
       };
 
       es.onerror = () => {
@@ -75,7 +103,12 @@ export function useBroadcast() {
 
     connect();
 
-    // EventSource is closed automatically on unmount
+    return () => {
+      activeRef.current = false;
+      if (timerRef.current) clearTimeout(timerRef.current);
+      connectionRef.current?.close();
+      connectionRef.current = null;
+    };
   }, []);
 
   return { status };

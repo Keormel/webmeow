@@ -8,6 +8,8 @@ export enum EventType {
   BEACH_AVAILABLE = "beach.activity_available",
 
   PUBLIC_ANNOUNCEMENT = "public.announcement",
+
+  RESORT_WIDE_ANNOUNCEMENT = "resort-wide.announcement",
 }
 
 export interface IslandEvent {

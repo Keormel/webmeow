@@ -5,8 +5,18 @@ import type { BroadcastEvent } from "@/types/broadcast";
 
 const MAX_EVENTS = 100;
 
+const ALL_ZONE_CHANNELS = [
+  ChannelId.Airport,
+  ChannelId.Hotel,
+  ChannelId.Beach,
+  ChannelId.Parrot,
+  ChannelId.Broadcast,
+  ChannelId.ResortWide,
+] as const;
+
 interface IngestEventOptions {
   mirrorToResortWide?: boolean;
+  fanOutToAllZones?: boolean;
 }
 
 interface EventsState {
@@ -54,15 +64,31 @@ export const useEventsStore = create<EventsState>()((set) => ({
 
   ingestEvent: (event, options) =>
     set((state) => {
-      const nextEvents = {
-        ...state.events,
-        [event.channel]: prependEvent(state.events[event.channel], event),
-      };
+      const nextEvents = { ...state.events };
+      const nextActivityTick = { ...state.activityTick };
 
-      const nextActivityTick = {
-        ...state.activityTick,
-        [event.channel]: state.activityTick[event.channel] + 1,
-      };
+      if (options?.fanOutToAllZones) {
+        for (const channel of ALL_ZONE_CHANNELS) {
+          const zonedEvent: BroadcastEvent = {
+            ...event,
+            id: crypto.randomUUID(),
+            channel,
+          };
+          nextEvents[channel] = prependEvent(nextEvents[channel], zonedEvent);
+          nextActivityTick[channel] = nextActivityTick[channel] + 1;
+        }
+
+        return {
+          events: nextEvents,
+          activityTick: nextActivityTick,
+        };
+      }
+
+      nextEvents[event.channel] = prependEvent(
+        state.events[event.channel],
+        event
+      );
+      nextActivityTick[event.channel] = state.activityTick[event.channel] + 1;
 
       const shouldMirrorToResortWide =
         options?.mirrorToResortWide && event.channel !== ChannelId.ResortWide;
