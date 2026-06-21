@@ -46,6 +46,7 @@ function getErrorMessage(data: unknown, fallback: string): string {
 
 function createJsonApi(basePath = "") {
   const instance = axios.create({ baseURL: `${env.gatewayUrl}${basePath}` });
+  const inFlightGets = new Map<string, Promise<unknown>>();
 
   async function request<T>(
     schema: ZodType<T>,
@@ -63,8 +64,29 @@ function createJsonApi(basePath = "") {
     }
   }
 
+  async function get<T>(schema: ZodType<T>, url: string): Promise<T> {
+    const config: AxiosRequestConfig = { url, method: "GET" };
+    const key = instance.getUri(config);
+    const pending = inFlightGets.get(key);
+
+    if (pending) {
+      return pending as Promise<T>;
+    }
+
+    const promise = request(schema, config);
+    inFlightGets.set(key, promise);
+
+    try {
+      return await promise;
+    } finally {
+      if (inFlightGets.get(key) === promise) {
+        inFlightGets.delete(key);
+      }
+    }
+  }
+
   return {
-    get: <T>(schema: ZodType<T>, url: string) => request(schema, { url }),
+    get,
     post: <T>(schema: ZodType<T>, url: string, data: unknown) =>
       request(schema, { url, method: "POST", data }),
     delete: <T>(schema: ZodType<T>, url: string) =>
