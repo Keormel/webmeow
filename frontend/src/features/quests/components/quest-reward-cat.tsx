@@ -74,14 +74,14 @@ export function QuestRewardCat({ steps, activeStep }: QuestRewardCatProps) {
 
   return (
     <div className="flex justify-center" data-testid="quest-reward-cat">
-      <div className="relative h-40 w-[134px] overflow-visible">
+      <div className="quest-reward-cat-frame relative h-40 w-[134px] overflow-visible">
         {CAT_ASSET && (
           <img
             src={CAT_ASSET}
             alt=""
             aria-hidden="true"
             draggable={false}
-            className="pointer-events-none absolute top-0 right-0 h-full w-[85.5%] select-none"
+            className="quest-reward-cat-base pointer-events-none absolute top-0 right-0 h-full w-[85.5%] select-none"
           />
         )}
 
